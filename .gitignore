@@ -1,0 +1,8 @@
+.vs/*
+Debug/*
+Release/*
+Managed/Debug/*
+Managed/Release/*
+Managed/obj/*
+Managed/bin/*
+Native/Debug/*
