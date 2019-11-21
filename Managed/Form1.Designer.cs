@@ -38,6 +38,10 @@
             this.zoomOutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resetZoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.label4 = new System.Windows.Forms.Label();
+            this.loopCount = new System.Windows.Forms.NumericUpDown();
+            this.loopNTimes = new System.Windows.Forms.RadioButton();
+            this.loopForever = new System.Windows.Forms.RadioButton();
             this.gifSpeed = new System.Windows.Forms.NumericUpDown();
             this.label3 = new System.Windows.Forms.Label();
             this.autoplayBtn = new System.Windows.Forms.Button();
@@ -49,17 +53,13 @@
             this.label1 = new System.Windows.Forms.Label();
             this.spriteWidth = new System.Windows.Forms.NumericUpDown();
             this.canvas = new System.Windows.Forms.Panel();
-            this.loopForever = new System.Windows.Forms.RadioButton();
-            this.loopNTimes = new System.Windows.Forms.RadioButton();
-            this.loopCount = new System.Windows.Forms.NumericUpDown();
-            this.label4 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.loopCount)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gifSpeed)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.spriteHeight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.spriteWidth)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.loopCount)).BeginInit();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -69,7 +69,7 @@
             this.viewToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(800, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(977, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -87,7 +87,7 @@
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.OpenToolStripMenuItem_Click);
             // 
@@ -95,7 +95,7 @@
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.saveToolStripMenuItem.Text = "Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.SaveToolStripMenuItem_Click);
             // 
@@ -103,7 +103,7 @@
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             this.exitToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F4)));
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
             // 
@@ -160,6 +160,47 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(200, 426);
             this.panel1.TabIndex = 1;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(118, 219);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(31, 13);
+            this.label4.TabIndex = 9;
+            this.label4.Text = "times";
+            // 
+            // loopCount
+            // 
+            this.loopCount.Enabled = false;
+            this.loopCount.Location = new System.Drawing.Point(66, 217);
+            this.loopCount.Name = "loopCount";
+            this.loopCount.Size = new System.Drawing.Size(46, 20);
+            this.loopCount.TabIndex = 8;
+            // 
+            // loopNTimes
+            // 
+            this.loopNTimes.AutoSize = true;
+            this.loopNTimes.Enabled = false;
+            this.loopNTimes.Location = new System.Drawing.Point(15, 217);
+            this.loopNTimes.Name = "loopNTimes";
+            this.loopNTimes.Size = new System.Drawing.Size(49, 17);
+            this.loopNTimes.TabIndex = 7;
+            this.loopNTimes.TabStop = true;
+            this.loopNTimes.Text = "Loop";
+            this.loopNTimes.UseVisualStyleBackColor = true;
+            // 
+            // loopForever
+            // 
+            this.loopForever.AutoSize = true;
+            this.loopForever.Enabled = false;
+            this.loopForever.Location = new System.Drawing.Point(15, 194);
+            this.loopForever.Name = "loopForever";
+            this.loopForever.Size = new System.Drawing.Size(85, 17);
+            this.loopForever.TabIndex = 6;
+            this.loopForever.TabStop = true;
+            this.loopForever.Text = "Loop forever";
+            this.loopForever.UseVisualStyleBackColor = true;
             // 
             // gifSpeed
             // 
@@ -267,56 +308,15 @@
             this.canvas.Dock = System.Windows.Forms.DockStyle.Fill;
             this.canvas.Location = new System.Drawing.Point(200, 24);
             this.canvas.Name = "canvas";
-            this.canvas.Size = new System.Drawing.Size(600, 426);
+            this.canvas.Size = new System.Drawing.Size(777, 426);
             this.canvas.TabIndex = 2;
             this.canvas.Paint += new System.Windows.Forms.PaintEventHandler(this.Canvas_Paint);
-            // 
-            // loopForever
-            // 
-            this.loopForever.AutoSize = true;
-            this.loopForever.Enabled = false;
-            this.loopForever.Location = new System.Drawing.Point(15, 194);
-            this.loopForever.Name = "loopForever";
-            this.loopForever.Size = new System.Drawing.Size(85, 17);
-            this.loopForever.TabIndex = 6;
-            this.loopForever.TabStop = true;
-            this.loopForever.Text = "Loop forever";
-            this.loopForever.UseVisualStyleBackColor = true;
-            // 
-            // loopNTimes
-            // 
-            this.loopNTimes.AutoSize = true;
-            this.loopNTimes.Enabled = false;
-            this.loopNTimes.Location = new System.Drawing.Point(15, 217);
-            this.loopNTimes.Name = "loopNTimes";
-            this.loopNTimes.Size = new System.Drawing.Size(49, 17);
-            this.loopNTimes.TabIndex = 7;
-            this.loopNTimes.TabStop = true;
-            this.loopNTimes.Text = "Loop";
-            this.loopNTimes.UseVisualStyleBackColor = true;
-            // 
-            // loopCount
-            // 
-            this.loopCount.Enabled = false;
-            this.loopCount.Location = new System.Drawing.Point(66, 217);
-            this.loopCount.Name = "loopCount";
-            this.loopCount.Size = new System.Drawing.Size(46, 20);
-            this.loopCount.TabIndex = 8;
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(118, 219);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(31, 13);
-            this.label4.TabIndex = 9;
-            this.label4.Text = "times";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(977, 450);
             this.Controls.Add(this.canvas);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.menuStrip1);
@@ -330,12 +330,12 @@
             this.menuStrip1.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.loopCount)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gifSpeed)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.spriteHeight)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.spriteWidth)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.loopCount)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

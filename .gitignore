@@ -6,3 +6,4 @@ Managed/Release/*
 Managed/obj/*
 Managed/bin/*
 Native/Debug/*
+Native/Release/*

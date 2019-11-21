@@ -5,4 +5,8 @@
     <StartProgram>C:\Users\Claire\source\repos\Spritesheet2Gif\Debug\Spritesheet2Gif.exe</StartProgram>
     <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Users\Claire\source\repos\Spritesheet2Gif\Release\Spritesheet2Gif.exe</StartProgram>
+  </PropertyGroup>
 </Project>
