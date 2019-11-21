@@ -23,6 +23,11 @@ namespace Spritesheet2Gif
             }
 
             autoplay = false;
+
+            saveToolStripMenuItem.Enabled = false;
+            zoomInToolStripMenuItem.Enabled = false;
+            zoomOutToolStripMenuItem.Enabled = false;
+            resetZoomToolStripMenuItem.Enabled = false;
         }
 
         private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
@@ -56,6 +61,19 @@ namespace Spritesheet2Gif
             gifSpeed.Maximum = 5000;
             gifSpeed.Value = 100;
             gifSpeed.Increment = 10;
+
+            saveToolStripMenuItem.Enabled = true;
+            zoomInToolStripMenuItem.Enabled = true;
+            zoomOutToolStripMenuItem.Enabled = true;
+            resetZoomToolStripMenuItem.Enabled = true;
+
+            loopForever.Enabled = true;
+            loopNTimes.Enabled = true;
+            loopCount.Enabled = true;
+            loopCount.Minimum = 1;
+            loopCount.Maximum = 999999;
+            loopCount.Value = 1;
+            loopForever.Select();
 
             Native.Paint();
         }
@@ -159,7 +177,13 @@ namespace Spritesheet2Gif
 
         private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Native.SaveGif(this.Handle, (int)gifSpeed.Value);
+            int loopCountLowLevel = 0;
+            if (loopNTimes.Checked)
+            {
+                loopCountLowLevel = (int)loopCount.Value;
+            }
+
+            Native.SaveGif(this.Handle, (int)gifSpeed.Value, loopCountLowLevel);
         }
 
         private void ZoomInToolStripMenuItem_Click(object sender, EventArgs e)
@@ -216,7 +240,7 @@ class Native
     public static extern void SetAutoplaySpeed(IntPtr parentDialog, int value);
 
     [DllImport("Native.dll")]
-    public static extern void SaveGif(IntPtr parentDialog, int animationSpeed);
+    public static extern void SaveGif(IntPtr parentDialog, int animationSpeed, int loopCount);
 
     [DllImport("Native.dll")]
     public static extern void ZoomIn();

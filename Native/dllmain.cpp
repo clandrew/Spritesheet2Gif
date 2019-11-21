@@ -362,7 +362,7 @@ extern "C" __declspec(dllexport) void _stdcall SetAutoplaySpeed(HWND parent, int
 	StartTimer(parent, 1, value);
 }
 
-extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int animationSpeed)
+extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int animationSpeed, int loopCount)
 {
 	TCHAR documentsPath[MAX_PATH];
 
@@ -430,8 +430,15 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 		
 		unsigned char extSize = 3;
 		unsigned char loopTypeIsAnimatedGif = 1;
+
 		unsigned char loopCountLsb = 0;
 		unsigned char loopCountMsb = 0;
+		if (loopCount > 0)
+		{
+			loopCountLsb = loopCount & 0xFF;
+			loopCountMsb = loopCount >> 8;
+		}
+
 		unsigned char data[] = { extSize, loopTypeIsAnimatedGif, loopCountLsb, loopCountMsb };
 
 		value.vt = VT_UI1 | VT_VECTOR;
