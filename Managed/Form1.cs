@@ -161,6 +161,24 @@ namespace Spritesheet2Gif
         {
             Native.SaveGif(this.Handle, (int)gifSpeed.Value);
         }
+
+        private void ZoomInToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Native.ZoomIn();
+            Native.Paint();
+        }
+
+        private void ZoomOutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Native.ZoomOut();
+            Native.Paint();
+        }
+
+        private void ResetZoomToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Native.ResetZoom();
+            Native.Paint();
+        }
     }
 }
 
@@ -199,6 +217,15 @@ class Native
 
     [DllImport("Native.dll")]
     public static extern void SaveGif(IntPtr parentDialog, int animationSpeed);
+
+    [DllImport("Native.dll")]
+    public static extern void ZoomIn();
+
+    [DllImport("Native.dll")]
+    public static extern void ZoomOut();
+
+    [DllImport("Native.dll")]
+    public static extern void ResetZoom();
 
     [DllImport("Native.dll")]
     public static extern void Uninitialize();

@@ -28,6 +28,10 @@ int g_spriteIndex;
 int g_spriteWidth;
 int g_spriteHeight;
 
+static const float g_zoomPercents[] = {12.5f, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800};
+static const int g_defaultZoomIndex = 3;
+int g_zoomIndex;
+
 struct SpritesheetBitmapData
 {
 	std::vector<UINT> DestBuffer;
@@ -73,6 +77,7 @@ extern "C" __declspec(dllexport) bool _stdcall Initialize(int clientWidth, int c
 
 	g_spriteIndex = 0;
 	g_autoplay = false;
+	g_zoomIndex = g_defaultZoomIndex;
 	
 	return true;
 }
@@ -235,11 +240,20 @@ extern "C" __declspec(dllexport) void _stdcall Paint()
 
 	if (g_d2dSpritesheetBitmap)
 	{
+		float zoomFactor = g_zoomPercents[g_zoomIndex] / 100.0f;
+		D2D1_MATRIX_3X2_F transform = D2D1::Matrix3x2F::Scale(zoomFactor, zoomFactor);
+		g_renderTarget->SetTransform(transform);
+
 		D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
 		
 		D2D1_RECT_F destRect = D2D1::RectF(0, 0, g_spriteWidth, g_spriteHeight);
 		D2D1_RECT_F sourceRect = g_spritesheetRects[g_spriteIndex];
-		g_renderTarget->DrawBitmap(g_d2dSpritesheetBitmap.Get(), destRect, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR, sourceRect);
+		g_renderTarget->DrawBitmap(
+			g_d2dSpritesheetBitmap.Get(), 
+			destRect, 
+			1.0f, 
+			D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR, 
+			sourceRect);
 	}
 
 	VerifyHR(g_renderTarget->EndDraw());	
@@ -568,6 +582,27 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 	{
 		return;
 	}
+}
+
+extern "C" __declspec(dllexport) void _stdcall ZoomIn()
+{
+	if (g_zoomIndex >= _countof(g_zoomPercents) - 1)
+		return;
+
+	g_zoomIndex++;
+}
+
+extern "C" __declspec(dllexport) void _stdcall ZoomOut()
+{
+	if (g_zoomIndex <= 0)
+		return;
+
+	g_zoomIndex--;
+}
+
+extern "C" __declspec(dllexport) void _stdcall ResetZoom()
+{
+	g_zoomIndex = g_defaultZoomIndex;
 }
 
 extern "C" __declspec(dllexport) void _stdcall Uninitialize()
