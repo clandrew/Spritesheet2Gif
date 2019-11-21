@@ -1,6 +1,8 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
 
+using Microsoft::WRL::ComPtr;
+
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved
@@ -16,8 +18,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     }
     return TRUE;
 }
-
-using Microsoft::WRL::ComPtr;
 
 ComPtr<IWICImagingFactory> g_wicImagingFactory;
 ComPtr<ID2D1Factory7> g_d2dFactory;
@@ -348,11 +348,40 @@ extern "C" __declspec(dllexport) void _stdcall SetAutoplaySpeed(HWND parent, int
 	StartTimer(parent, 1, value);
 }
 
-extern "C" __declspec(dllexport) void _stdcall SaveGif(int animationSpeed)
+extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int animationSpeed)
 {
+	TCHAR documentsPath[MAX_PATH];
+
+	VerifyHR(SHGetFolderPath(NULL,
+		CSIDL_PERSONAL | CSIDL_FLAG_CREATE,
+		NULL,
+		0,
+		documentsPath));
+
+	OPENFILENAME ofn;
+	ZeroMemory(&ofn, sizeof(ofn));
+
+	wchar_t szFile[MAX_PATH];
+	wcscpy_s(szFile, L"export.gif");
+
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = parentDialog;
+	ofn.lpstrFile = szFile;
+	ofn.nMaxFile = sizeof(szFile);
+	ofn.lpstrFilter = L"Graphics Interchange Format (GIF)\0*.GIF\0All\0*.*\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = documentsPath;
+	ofn.lpstrDefExt = L"txt";
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+
+	if (GetSaveFileName(&ofn) == 0)
+		return;
+
 	EnsureWicImagingFactory();
 
-	std::wstring destFilename = L"C:\\Users\\Claire\\source\\repos\\Spritesheet2Gif\\Debug\\export.gif";
+	std::wstring destFilename = ofn.lpstrFile;
 
 	ComPtr<IWICStream> stream;
 	if (FAILED(g_wicImagingFactory->CreateStream(&stream)))

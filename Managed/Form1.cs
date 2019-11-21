@@ -159,7 +159,7 @@ namespace Spritesheet2Gif
 
         private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Native.SaveGif((int)gifSpeed.Value);
+            Native.SaveGif(this.Handle, (int)gifSpeed.Value);
         }
     }
 }
@@ -198,7 +198,7 @@ class Native
     public static extern void SetAutoplaySpeed(IntPtr parentDialog, int value);
 
     [DllImport("Native.dll")]
-    public static extern void SaveGif(int animationSpeed);
+    public static extern void SaveGif(IntPtr parentDialog, int animationSpeed);
 
     [DllImport("Native.dll")]
     public static extern void Uninitialize();
