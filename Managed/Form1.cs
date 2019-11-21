@@ -50,12 +50,12 @@ namespace Spritesheet2Gif
             previousBtn.Enabled = true;
             nextBtn.Enabled = true;
             autoplayBtn.Enabled = true;
-            autoplaySpeed.Enabled = true;
+            gifSpeed.Enabled = true;
 
-            autoplaySpeed.Minimum = 10;
-            autoplaySpeed.Maximum = 5000;
-            autoplaySpeed.Value = 100;
-            autoplaySpeed.Increment = 10;
+            gifSpeed.Minimum = 10;
+            gifSpeed.Maximum = 5000;
+            gifSpeed.Value = 100;
+            gifSpeed.Increment = 10;
 
             Native.Paint();
         }
@@ -154,12 +154,12 @@ namespace Spritesheet2Gif
 
         private void AutoplaySpeed_ValueChanged(object sender, EventArgs e)
         {
-            Native.SetAutoplaySpeed(canvas.Handle, (int)autoplaySpeed.Value);
+            Native.SetAutoplaySpeed(canvas.Handle, (int)gifSpeed.Value);
         }
 
         private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Native.SaveGif();
+            Native.SaveGif((int)gifSpeed.Value);
         }
     }
 }
@@ -198,7 +198,7 @@ class Native
     public static extern void SetAutoplaySpeed(IntPtr parentDialog, int value);
 
     [DllImport("Native.dll")]
-    public static extern void SaveGif();
+    public static extern void SaveGif(int animationSpeed);
 
     [DllImport("Native.dll")]
     public static extern void Uninitialize();

@@ -31,9 +31,10 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.autoplaySpeed = new System.Windows.Forms.NumericUpDown();
+            this.gifSpeed = new System.Windows.Forms.NumericUpDown();
             this.label3 = new System.Windows.Forms.Label();
             this.autoplayBtn = new System.Windows.Forms.Button();
             this.nextBtn = new System.Windows.Forms.Button();
@@ -44,10 +45,9 @@
             this.label1 = new System.Windows.Forms.Label();
             this.spriteWidth = new System.Windows.Forms.NumericUpDown();
             this.canvas = new System.Windows.Forms.Panel();
-            this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.autoplaySpeed)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gifSpeed)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.spriteHeight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.spriteWidth)).BeginInit();
@@ -77,22 +77,30 @@
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.OpenToolStripMenuItem_Click);
+            // 
+            // saveToolStripMenuItem
+            // 
+            this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
+            this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.saveToolStripMenuItem.Text = "Save";
+            this.saveToolStripMenuItem.Click += new System.EventHandler(this.SaveToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             this.exitToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F4)));
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
             // 
             // panel1
             // 
             this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel1.Controls.Add(this.autoplaySpeed);
+            this.panel1.Controls.Add(this.gifSpeed);
             this.panel1.Controls.Add(this.label3);
             this.panel1.Controls.Add(this.autoplayBtn);
             this.panel1.Controls.Add(this.nextBtn);
@@ -104,23 +112,23 @@
             this.panel1.Size = new System.Drawing.Size(200, 426);
             this.panel1.TabIndex = 1;
             // 
-            // autoplaySpeed
+            // gifSpeed
             // 
-            this.autoplaySpeed.Enabled = false;
-            this.autoplaySpeed.Location = new System.Drawing.Point(101, 168);
-            this.autoplaySpeed.Name = "autoplaySpeed";
-            this.autoplaySpeed.Size = new System.Drawing.Size(75, 20);
-            this.autoplaySpeed.TabIndex = 5;
-            this.autoplaySpeed.ValueChanged += new System.EventHandler(this.AutoplaySpeed_ValueChanged);
+            this.gifSpeed.Enabled = false;
+            this.gifSpeed.Location = new System.Drawing.Point(97, 168);
+            this.gifSpeed.Name = "gifSpeed";
+            this.gifSpeed.Size = new System.Drawing.Size(75, 20);
+            this.gifSpeed.TabIndex = 5;
+            this.gifSpeed.ValueChanged += new System.EventHandler(this.AutoplaySpeed_ValueChanged);
             // 
             // label3
             // 
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(12, 170);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(83, 13);
+            this.label3.Size = new System.Drawing.Size(82, 13);
             this.label3.TabIndex = 4;
-            this.label3.Text = "Autoplay speed:";
+            this.label3.Text = "Frame Duration:";
             // 
             // autoplayBtn
             // 
@@ -214,14 +222,6 @@
             this.canvas.TabIndex = 2;
             this.canvas.Paint += new System.Windows.Forms.PaintEventHandler(this.Canvas_Paint);
             // 
-            // saveToolStripMenuItem
-            // 
-            this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.saveToolStripMenuItem.Text = "Save";
-            this.saveToolStripMenuItem.Click += new System.EventHandler(this.SaveToolStripMenuItem_Click);
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -240,7 +240,7 @@
             this.menuStrip1.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.autoplaySpeed)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gifSpeed)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.spriteHeight)).EndInit();
@@ -267,7 +267,7 @@
         private System.Windows.Forms.Button previousBtn;
         private System.Windows.Forms.Button autoplayBtn;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.NumericUpDown autoplaySpeed;
+        private System.Windows.Forms.NumericUpDown gifSpeed;
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
     }
 }

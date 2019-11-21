@@ -348,11 +348,11 @@ extern "C" __declspec(dllexport) void _stdcall SetAutoplaySpeed(HWND parent, int
 	StartTimer(parent, 1, value);
 }
 
-extern "C" __declspec(dllexport) void _stdcall SaveGif()
+extern "C" __declspec(dllexport) void _stdcall SaveGif(int animationSpeed)
 {
 	EnsureWicImagingFactory();
 
-	std::wstring destFilename = L"export.gif";
+	std::wstring destFilename = L"C:\\Users\\Claire\\source\\repos\\Spritesheet2Gif\\Debug\\export.gif";
 
 	ComPtr<IWICStream> stream;
 	if (FAILED(g_wicImagingFactory->CreateStream(&stream)))
@@ -458,11 +458,16 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif()
 			return;
 		}
 
+		if (FAILED(frameEncode->Initialize(wicPropertyBag.Get())))
+		{
+			return;
+		}
+
 		// Reference: https://docs.microsoft.com/en-us/windows/win32/wic/-wic-native-image-format-metadata-queries#gif-metadata
 		// Cached MSDN docpage: https://webcache.googleusercontent.com/search?q=cache%3A7nMWvmIamxMJ%3Ahttps%3A%2F%2Fcode.msdn.microsoft.com%2FWindows-Imaging-Component-65abbc6a%2Fsourcecode%3FfileId%3D127204%26pathId%3D969071766&hl=en&gl=us&strip=1&vwsrc=0&fbclid=IwAR2ZTDktvIs0t-8fv_x33Y1t4SqgeMMR8TysjwWYy_JwjE49V31Yi3Sf6Kk
 		
 		ComPtr<IWICMetadataQueryWriter> frameMetadataQueryWriter;
-		if (FAILED(encoder->GetMetadataQueryWriter(&frameMetadataQueryWriter)))
+		if (FAILED(frameEncode->GetMetadataQueryWriter(&frameMetadataQueryWriter)))
 		{
 			return;
 		}
@@ -471,16 +476,11 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif()
 			PROPVARIANT value;
 			PropVariantInit(&value);
 			value.vt = VT_UI2;
-			value.uiVal = 50;
+			value.uiVal = animationSpeed / 10;
 			if (FAILED(frameMetadataQueryWriter->SetMetadataByName(L"/grctlext/Delay", &value)))
 			{
 				return;
 			}
-		}
-
-		if (FAILED(frameEncode->Initialize(wicPropertyBag.Get())))
-		{
-			return;
 		}
 
 		if (FAILED(frameEncode->SetSize(g_spriteWidth, g_spriteHeight)))
