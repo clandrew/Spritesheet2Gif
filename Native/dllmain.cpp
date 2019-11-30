@@ -24,6 +24,7 @@ ComPtr<ID2D1Factory7> g_d2dFactory;
 ComPtr<ID2D1DCRenderTarget> g_renderTarget;
 ComPtr<ID2D1Bitmap> g_d2dSpritesheetBitmap;
 std::vector<D2D1_RECT_F> g_spritesheetRects;
+std::wstring g_spritesheetFilePath;
 int g_spriteIndex;
 int g_spriteWidth;
 int g_spriteHeight;
@@ -131,45 +132,13 @@ void EnsureWicImagingFactory()
 	}
 }
 
-extern "C" __declspec(dllexport) void _stdcall OpenSpritesheetFile(HWND dialogParent)
+void LoadSpritesheetFileImpl()
 {
-	TCHAR documentsPath[MAX_PATH];
-
-	VerifyHR(SHGetFolderPath(NULL,
-		CSIDL_PERSONAL | CSIDL_FLAG_CREATE,
-		NULL,
-		0,
-		documentsPath));
-
-	OPENFILENAME ofn;       // common dialog box structure
-	wchar_t szFile[MAX_PATH];
-
-	ZeroMemory(&ofn, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = dialogParent;
-	ofn.lpstrFile = szFile;
-
-	// Set lpstrFile[0] to '\0' so that GetOpenFileName does not 
-	// use the contents of szFile to initialize itself.
-	ofn.lpstrFile[0] = L'\0';
-	ofn.nMaxFile = sizeof(szFile);
-	ofn.lpstrFilter = L"All\0*.*\0PNG Images\0*.PNG\0";
-	ofn.nFilterIndex = 1;
-	ofn.lpstrFileTitle = NULL;
-	ofn.nMaxFileTitle = 0;
-	ofn.lpstrInitialDir = documentsPath;
-	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-
-	// Display the Open dialog box. 
-
-	if (GetOpenFileName(&ofn) == 0)
-		return;
-
 	EnsureWicImagingFactory();
 
 	ComPtr<IWICBitmapDecoder> spDecoder;
 	if (FAILED(g_wicImagingFactory->CreateDecoderFromFilename(
-		ofn.lpstrFile,
+		g_spritesheetFilePath.c_str(),
 		NULL,
 		GENERIC_READ,
 		WICDecodeMetadataCacheOnLoad, &spDecoder)))
@@ -208,7 +177,7 @@ extern "C" __declspec(dllexport) void _stdcall OpenSpritesheetFile(HWND dialogPa
 
 	g_spritesheetBitmapData.DestBuffer.resize(g_spritesheetBitmapData.Size.width * g_spritesheetBitmapData.Size.height);
 	if (FAILED(spConverter->CopyPixels(
-		NULL, 
+		NULL,
 		g_spritesheetBitmapData.Size.width * sizeof(UINT),
 		g_spritesheetBitmapData.DestBuffer.capacity() * sizeof(UINT),
 		(BYTE*)& g_spritesheetBitmapData.DestBuffer[0])))
@@ -218,14 +187,53 @@ extern "C" __declspec(dllexport) void _stdcall OpenSpritesheetFile(HWND dialogPa
 
 	D2D1_BITMAP_PROPERTIES bitmapProperties = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
 	if (FAILED(g_renderTarget->CreateBitmap(
-		g_spritesheetBitmapData.Size, 
+		g_spritesheetBitmapData.Size,
 		&g_spritesheetBitmapData.DestBuffer[0],
-		g_spritesheetBitmapData.Size.width * sizeof(UINT), 
-		bitmapProperties, 
+		g_spritesheetBitmapData.Size.width * sizeof(UINT),
+		bitmapProperties,
 		&g_d2dSpritesheetBitmap)))
 	{
 		return;
 	}
+}
+
+extern "C" __declspec(dllexport) void _stdcall OpenSpritesheetFile(HWND dialogParent)
+{
+	TCHAR documentsPath[MAX_PATH];
+
+	VerifyHR(SHGetFolderPath(NULL,
+		CSIDL_PERSONAL | CSIDL_FLAG_CREATE,
+		NULL,
+		0,
+		documentsPath));
+
+	OPENFILENAME ofn;       // common dialog box structure
+	wchar_t szFile[MAX_PATH];
+
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = dialogParent;
+	ofn.lpstrFile = szFile;
+
+	// Set lpstrFile[0] to '\0' so that GetOpenFileName does not 
+	// use the contents of szFile to initialize itself.
+	ofn.lpstrFile[0] = L'\0';
+	ofn.nMaxFile = sizeof(szFile);
+	ofn.lpstrFilter = L"All\0*.*\0PNG Images\0*.PNG\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = documentsPath;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+	// Display the Open dialog box. 
+
+	if (GetOpenFileName(&ofn) == 0)
+		return;
+
+	g_spritesheetFilePath = ofn.lpstrFile;
+
+	LoadSpritesheetFileImpl();
 
 	g_spriteWidth = g_spritesheetBitmapData.Size.width;
 	g_spriteHeight = g_spritesheetBitmapData.Size.height;
@@ -610,6 +618,11 @@ extern "C" __declspec(dllexport) void _stdcall ZoomOut()
 extern "C" __declspec(dllexport) void _stdcall ResetZoom()
 {
 	g_zoomIndex = g_defaultZoomIndex;
+}
+
+extern "C" __declspec(dllexport) void _stdcall ReloadImage()
+{
+	LoadSpritesheetFileImpl();
 }
 
 extern "C" __declspec(dllexport) void _stdcall Uninitialize()

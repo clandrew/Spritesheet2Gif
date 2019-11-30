@@ -28,6 +28,7 @@ namespace Spritesheet2Gif
             zoomInToolStripMenuItem.Enabled = false;
             zoomOutToolStripMenuItem.Enabled = false;
             resetZoomToolStripMenuItem.Enabled = false;
+            refreshToolStripMenuItem.Enabled = false;
         }
 
         private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
@@ -66,6 +67,7 @@ namespace Spritesheet2Gif
             zoomInToolStripMenuItem.Enabled = true;
             zoomOutToolStripMenuItem.Enabled = true;
             resetZoomToolStripMenuItem.Enabled = true;
+            refreshToolStripMenuItem.Enabled = true;
 
             loopForever.Enabled = true;
             loopNTimes.Enabled = true;
@@ -203,6 +205,12 @@ namespace Spritesheet2Gif
             Native.ResetZoom();
             Native.Paint();
         }
+
+        private void RefreshToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Native.ReloadImage();
+            Native.Paint();
+        }
     }
 }
 
@@ -250,6 +258,9 @@ class Native
 
     [DllImport("Native.dll")]
     public static extern void ResetZoom();
+
+    [DllImport("Native.dll")]
+    public static extern void ReloadImage();
 
     [DllImport("Native.dll")]
     public static extern void Uninitialize();
