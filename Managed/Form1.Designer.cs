@@ -54,6 +54,12 @@
             this.label1 = new System.Windows.Forms.Label();
             this.spriteWidth = new System.Windows.Forms.NumericUpDown();
             this.canvas = new System.Windows.Forms.Panel();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.gifHeight = new System.Windows.Forms.NumericUpDown();
+            this.label6 = new System.Windows.Forms.Label();
+            this.gifWidth = new System.Windows.Forms.NumericUpDown();
             this.menuStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.loopCount)).BeginInit();
@@ -61,6 +67,10 @@
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.spriteHeight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.spriteWidth)).BeginInit();
+            this.groupBox2.SuspendLayout();
+            this.groupBox3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gifHeight)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gifWidth)).BeginInit();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -89,7 +99,7 @@
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.OpenToolStripMenuItem_Click);
             // 
@@ -97,7 +107,7 @@
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.saveToolStripMenuItem.Text = "Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.SaveToolStripMenuItem_Click);
             // 
@@ -105,7 +115,7 @@
             // 
             this.refreshToolStripMenuItem.Name = "refreshToolStripMenuItem";
             this.refreshToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F5;
-            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.refreshToolStripMenuItem.Text = "Refresh";
             this.refreshToolStripMenuItem.Click += new System.EventHandler(this.RefreshToolStripMenuItem_Click);
             // 
@@ -113,7 +123,7 @@
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             this.exitToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F4)));
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
             // 
@@ -155,15 +165,8 @@
             // panel1
             // 
             this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel1.Controls.Add(this.label4);
-            this.panel1.Controls.Add(this.loopCount);
-            this.panel1.Controls.Add(this.loopNTimes);
-            this.panel1.Controls.Add(this.loopForever);
-            this.panel1.Controls.Add(this.gifSpeed);
-            this.panel1.Controls.Add(this.label3);
-            this.panel1.Controls.Add(this.autoplayBtn);
-            this.panel1.Controls.Add(this.nextBtn);
-            this.panel1.Controls.Add(this.previousBtn);
+            this.panel1.Controls.Add(this.groupBox3);
+            this.panel1.Controls.Add(this.groupBox2);
             this.panel1.Controls.Add(this.groupBox1);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Left;
             this.panel1.Location = new System.Drawing.Point(0, 24);
@@ -174,7 +177,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(118, 219);
+            this.label4.Location = new System.Drawing.Point(113, 73);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(31, 13);
             this.label4.TabIndex = 9;
@@ -183,7 +186,7 @@
             // loopCount
             // 
             this.loopCount.Enabled = false;
-            this.loopCount.Location = new System.Drawing.Point(66, 217);
+            this.loopCount.Location = new System.Drawing.Point(61, 71);
             this.loopCount.Name = "loopCount";
             this.loopCount.Size = new System.Drawing.Size(46, 20);
             this.loopCount.TabIndex = 8;
@@ -192,7 +195,7 @@
             // 
             this.loopNTimes.AutoSize = true;
             this.loopNTimes.Enabled = false;
-            this.loopNTimes.Location = new System.Drawing.Point(15, 217);
+            this.loopNTimes.Location = new System.Drawing.Point(10, 71);
             this.loopNTimes.Name = "loopNTimes";
             this.loopNTimes.Size = new System.Drawing.Size(49, 17);
             this.loopNTimes.TabIndex = 7;
@@ -204,7 +207,7 @@
             // 
             this.loopForever.AutoSize = true;
             this.loopForever.Enabled = false;
-            this.loopForever.Location = new System.Drawing.Point(15, 194);
+            this.loopForever.Location = new System.Drawing.Point(10, 48);
             this.loopForever.Name = "loopForever";
             this.loopForever.Size = new System.Drawing.Size(85, 17);
             this.loopForever.TabIndex = 6;
@@ -215,7 +218,7 @@
             // gifSpeed
             // 
             this.gifSpeed.Enabled = false;
-            this.gifSpeed.Location = new System.Drawing.Point(97, 168);
+            this.gifSpeed.Location = new System.Drawing.Point(92, 22);
             this.gifSpeed.Name = "gifSpeed";
             this.gifSpeed.Size = new System.Drawing.Size(75, 20);
             this.gifSpeed.TabIndex = 5;
@@ -224,7 +227,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 170);
+            this.label3.Location = new System.Drawing.Point(7, 24);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(82, 13);
             this.label3.TabIndex = 4;
@@ -233,7 +236,7 @@
             // autoplayBtn
             // 
             this.autoplayBtn.Enabled = false;
-            this.autoplayBtn.Location = new System.Drawing.Point(14, 132);
+            this.autoplayBtn.Location = new System.Drawing.Point(15, 49);
             this.autoplayBtn.Name = "autoplayBtn";
             this.autoplayBtn.Size = new System.Drawing.Size(162, 23);
             this.autoplayBtn.TabIndex = 3;
@@ -244,7 +247,7 @@
             // nextBtn
             // 
             this.nextBtn.Enabled = false;
-            this.nextBtn.Location = new System.Drawing.Point(101, 102);
+            this.nextBtn.Location = new System.Drawing.Point(102, 19);
             this.nextBtn.Name = "nextBtn";
             this.nextBtn.Size = new System.Drawing.Size(75, 23);
             this.nextBtn.TabIndex = 2;
@@ -255,7 +258,7 @@
             // previousBtn
             // 
             this.previousBtn.Enabled = false;
-            this.previousBtn.Location = new System.Drawing.Point(14, 102);
+            this.previousBtn.Location = new System.Drawing.Point(15, 19);
             this.previousBtn.Name = "previousBtn";
             this.previousBtn.Size = new System.Drawing.Size(75, 23);
             this.previousBtn.TabIndex = 1;
@@ -274,12 +277,12 @@
             this.groupBox1.Size = new System.Drawing.Size(189, 92);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Sprite Size";
+            this.groupBox1.Text = "Source Sprite Size";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(7, 56);
+            this.label2.Location = new System.Drawing.Point(7, 60);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(41, 13);
             this.label2.TabIndex = 3;
@@ -288,7 +291,7 @@
             // spriteHeight
             // 
             this.spriteHeight.Enabled = false;
-            this.spriteHeight.Location = new System.Drawing.Point(52, 54);
+            this.spriteHeight.Location = new System.Drawing.Point(52, 58);
             this.spriteHeight.Name = "spriteHeight";
             this.spriteHeight.Size = new System.Drawing.Size(120, 20);
             this.spriteHeight.TabIndex = 2;
@@ -297,7 +300,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(7, 21);
+            this.label1.Location = new System.Drawing.Point(7, 25);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(38, 13);
             this.label1.TabIndex = 1;
@@ -306,7 +309,7 @@
             // spriteWidth
             // 
             this.spriteWidth.Enabled = false;
-            this.spriteWidth.Location = new System.Drawing.Point(52, 19);
+            this.spriteWidth.Location = new System.Drawing.Point(52, 23);
             this.spriteWidth.Name = "spriteWidth";
             this.spriteWidth.Size = new System.Drawing.Size(120, 20);
             this.spriteWidth.TabIndex = 0;
@@ -321,6 +324,71 @@
             this.canvas.Size = new System.Drawing.Size(777, 426);
             this.canvas.TabIndex = 2;
             this.canvas.Paint += new System.Windows.Forms.PaintEventHandler(this.Canvas_Paint);
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.previousBtn);
+            this.groupBox2.Controls.Add(this.nextBtn);
+            this.groupBox2.Controls.Add(this.autoplayBtn);
+            this.groupBox2.Location = new System.Drawing.Point(4, 102);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(189, 82);
+            this.groupBox2.TabIndex = 10;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Navigation";
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.label5);
+            this.groupBox3.Controls.Add(this.label3);
+            this.groupBox3.Controls.Add(this.gifHeight);
+            this.groupBox3.Controls.Add(this.gifSpeed);
+            this.groupBox3.Controls.Add(this.label6);
+            this.groupBox3.Controls.Add(this.label4);
+            this.groupBox3.Controls.Add(this.gifWidth);
+            this.groupBox3.Controls.Add(this.loopForever);
+            this.groupBox3.Controls.Add(this.loopCount);
+            this.groupBox3.Controls.Add(this.loopNTimes);
+            this.groupBox3.Location = new System.Drawing.Point(4, 190);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(189, 175);
+            this.groupBox3.TabIndex = 11;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "GIF Properties";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(7, 143);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(41, 13);
+            this.label5.TabIndex = 7;
+            this.label5.Text = "Height:";
+            // 
+            // gifHeight
+            // 
+            this.gifHeight.Enabled = false;
+            this.gifHeight.Location = new System.Drawing.Point(52, 141);
+            this.gifHeight.Name = "gifHeight";
+            this.gifHeight.Size = new System.Drawing.Size(120, 20);
+            this.gifHeight.TabIndex = 6;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(7, 108);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(38, 13);
+            this.label6.TabIndex = 5;
+            this.label6.Text = "Width:";
+            // 
+            // gifWidth
+            // 
+            this.gifWidth.Enabled = false;
+            this.gifWidth.Location = new System.Drawing.Point(52, 106);
+            this.gifWidth.Name = "gifWidth";
+            this.gifWidth.Size = new System.Drawing.Size(120, 20);
+            this.gifWidth.TabIndex = 4;
             // 
             // Form1
             // 
@@ -339,13 +407,17 @@
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.loopCount)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gifSpeed)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.spriteHeight)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.spriteWidth)).EndInit();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gifHeight)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gifWidth)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -379,6 +451,12 @@
         private System.Windows.Forms.RadioButton loopNTimes;
         private System.Windows.Forms.RadioButton loopForever;
         private System.Windows.Forms.ToolStripMenuItem refreshToolStripMenuItem;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.NumericUpDown gifHeight;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.NumericUpDown gifWidth;
     }
 }
 

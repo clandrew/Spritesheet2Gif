@@ -29,7 +29,7 @@ int g_spriteIndex;
 int g_spriteWidth;
 int g_spriteHeight;
 
-static const float g_zoomPercents[] = {12.5f, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800};
+static const float g_zoomPercents[] = {6.75f, 12.5f, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1600};
 static const int g_defaultZoomIndex = 3;
 int g_zoomIndex;
 
@@ -345,7 +345,7 @@ void StartTimer(HWND parent, UINT_PTR id, UINT speed)
 	SetTimer(g_timer->ParentDialog, g_timer->EventId, speed, TimerProc);
 }
 
-extern "C" __declspec(dllexport) void _stdcall SetAutoplay(HWND parent, int value)
+extern "C" __declspec(dllexport) void _stdcall SetAutoplay(HWND parent, int value, int speed)
 {
 	bool newValue = value != 0;
 	if (g_autoplay == newValue)
@@ -356,7 +356,7 @@ extern "C" __declspec(dllexport) void _stdcall SetAutoplay(HWND parent, int valu
 	if (g_autoplay)
 	{
 		EnsureTimerStopped();
-		StartTimer(parent, 1, 100);
+		StartTimer(parent, 1, speed);
 	}
 	else
 	{
@@ -364,13 +364,13 @@ extern "C" __declspec(dllexport) void _stdcall SetAutoplay(HWND parent, int valu
 	}
 }
 
-extern "C" __declspec(dllexport) void _stdcall SetAutoplaySpeed(HWND parent, int value)
+extern "C" __declspec(dllexport) void _stdcall SetAutoplaySpeed(HWND parent, int speed)
 {
 	EnsureTimerStopped();
-	StartTimer(parent, 1, value);
+	StartTimer(parent, 1, speed);
 }
 
-extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int animationSpeed, int loopCount)
+extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int animationSpeed, int loopCount, int gifWidth, int gifHeight)
 {
 	TCHAR documentsPath[MAX_PATH];
 
@@ -476,8 +476,8 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 
 	ComPtr<IWICBitmap> singleSpriteWicBitmap;
 	if (FAILED(g_wicImagingFactory->CreateBitmap(
-		g_spritesheetBitmapData.Size.width,
-		g_spritesheetBitmapData.Size.height,
+		gifWidth,
+		gifHeight,
 		GUID_WICPixelFormat32bppPBGRA, WICBitmapCacheOnDemand, &singleSpriteWicBitmap)))
 	{
 		return;
@@ -541,7 +541,7 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 			}
 		}
 
-		if (FAILED(frameEncode->SetSize(g_spriteWidth, g_spriteHeight)))
+		if (FAILED(frameEncode->SetSize(gifWidth, gifHeight)))
 		{
 			return;
 		}
@@ -561,7 +561,7 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 
 		wicBitmapRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::CornflowerBlue));
 
-		D2D1_RECT_F destRect = D2D1::RectF(0, 0, g_spriteWidth, g_spriteHeight);
+		D2D1_RECT_F destRect = D2D1::RectF(0, 0, gifWidth, gifHeight);
 		D2D1_RECT_F sourceRect = g_spritesheetRects[i];
 		wicBitmapRenderTarget->DrawBitmap(
 			wicCompatibleSpritesheet.Get(), 

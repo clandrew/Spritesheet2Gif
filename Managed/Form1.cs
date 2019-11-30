@@ -53,6 +53,16 @@ namespace Spritesheet2Gif
             spriteHeight.Value = h;
             spriteHeight.Enabled = true;
 
+            gifWidth.Minimum = 1;
+            gifWidth.Maximum = 999999;
+            gifWidth.Value = w;
+            gifWidth.Enabled = true;
+
+            gifHeight.Minimum = 1;
+            gifHeight.Maximum = 999999;
+            gifHeight.Value = h;
+            gifHeight.Enabled = true;
+
             previousBtn.Enabled = true;
             nextBtn.Enabled = true;
             autoplayBtn.Enabled = true;
@@ -138,7 +148,7 @@ namespace Spritesheet2Gif
             if (autoplay)
             {
                 autoplayBtn.Text = "Autoplay: off";
-                Native.SetAutoplay(canvas.Handle, 0);
+                Native.SetAutoplay(canvas.Handle, 0, 0);
                 autoplay = false;
             }
         }
@@ -169,7 +179,7 @@ namespace Spritesheet2Gif
                 autoplayBtn.Text = "Autoplay: off";
             }
 
-            Native.SetAutoplay(canvas.Handle, autoplay ? 1 : 0);
+            Native.SetAutoplay(canvas.Handle, autoplay ? 1 : 0, (int)gifSpeed.Value);
         }
 
         private void AutoplaySpeed_ValueChanged(object sender, EventArgs e)
@@ -183,9 +193,9 @@ namespace Spritesheet2Gif
             if (loopNTimes.Checked)
             {
                 loopCountLowLevel = (int)loopCount.Value;
-            }
+            }                       
 
-            Native.SaveGif(this.Handle, (int)gifSpeed.Value, loopCountLowLevel);
+            Native.SaveGif(this.Handle, (int)gifSpeed.Value, loopCountLowLevel, (int)gifWidth.Value, (int)gifHeight.Value);
         }
 
         private void ZoomInToolStripMenuItem_Click(object sender, EventArgs e)
@@ -242,13 +252,13 @@ class Native
     public static extern void NextSprite();
 
     [DllImport("Native.dll")]
-    public static extern void SetAutoplay(IntPtr parentDialog, int value);
+    public static extern void SetAutoplay(IntPtr parentDialog, int value, int gifSpeed);
 
     [DllImport("Native.dll")]
-    public static extern void SetAutoplaySpeed(IntPtr parentDialog, int value);
+    public static extern void SetAutoplaySpeed(IntPtr parentDialog, int gifSpeed);
 
     [DllImport("Native.dll")]
-    public static extern void SaveGif(IntPtr parentDialog, int animationSpeed, int loopCount);
+    public static extern void SaveGif(IntPtr parentDialog, int animationSpeed, int loopCount, int gifWidth, int gifHeight);
 
     [DllImport("Native.dll")]
     public static extern void ZoomIn();
