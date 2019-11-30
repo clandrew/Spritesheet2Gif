@@ -18,5 +18,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <sstream>
+#include <assert.h>
 
 #endif //PCH_H

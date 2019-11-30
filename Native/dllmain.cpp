@@ -29,7 +29,57 @@ int g_spriteIndex;
 int g_spriteWidth;
 int g_spriteHeight;
 
+struct WindowTitleHelper
+{
+	std::wstring m_programName;
+	std::wstring m_currentFile;
+	std::wstring m_zoomFactor;
+
+	void UpdateWindowTitle(HWND dialogParent)
+	{
+		std::wstringstream strstrm;
+		strstrm << m_programName.c_str();
+		
+		if (m_currentFile.size() > 0)
+		{
+			strstrm << L" - " << m_currentFile.c_str();
+		}
+
+		strstrm << L" - " << m_zoomFactor.c_str();
+
+		SetWindowText(dialogParent, strstrm.str().c_str());
+	}
+
+public:
+	void Initialize(HWND dialogParent)
+	{
+		m_programName = L"Spritesheet2Gif";
+		m_zoomFactor = L"100%";
+	}
+
+	void SetZoomFactor(HWND dialogParent, wchar_t const* f)
+	{
+		m_zoomFactor = f;
+		UpdateWindowTitle(dialogParent);
+	}
+
+	void SetOpenFileName(HWND dialogParent, std::wstring fullPath)
+	{
+		size_t delimiterIndex = g_spritesheetFilePath.rfind('\\');
+		assert(delimiterIndex < g_spritesheetFilePath.size());
+		if (delimiterIndex >= g_spritesheetFilePath.size())
+			return;
+
+		m_currentFile = g_spritesheetFilePath.substr(delimiterIndex + 1);
+		UpdateWindowTitle(dialogParent);
+	}
+};
+
+WindowTitleHelper g_windowTitleHelper;
+
 static const float g_zoomPercents[] = {6.75f, 12.5f, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1600};
+static const wchar_t* g_zoomPercentStrings[] = {L"6.75f%", L"12.5f%", L"25%", L"50%", L"100%", L"200%", L"300%", L"400%", L"500%", L"600%", L"700%", L"800%", L"1000%", L"1200%", L"1400%", L"1600"};
+
 static const int g_defaultZoomIndex = 3;
 int g_zoomIndex;
 
@@ -60,7 +110,7 @@ void VerifyBool(BOOL b)
 		__debugbreak();
 }
 
-extern "C" __declspec(dllexport) bool _stdcall Initialize(int clientWidth, int clientHeight, HDC hdc)
+extern "C" __declspec(dllexport) bool _stdcall Initialize(int clientWidth, int clientHeight, HWND parentDialog, HDC hdc)
 {
 	D2D1_FACTORY_OPTIONS factoryOptions = {};
 	factoryOptions.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
@@ -79,6 +129,8 @@ extern "C" __declspec(dllexport) bool _stdcall Initialize(int clientWidth, int c
 	g_spriteIndex = 0;
 	g_autoplay = false;
 	g_zoomIndex = g_defaultZoomIndex;
+
+	g_windowTitleHelper.Initialize(parentDialog);
 	
 	return true;
 }
@@ -239,6 +291,8 @@ extern "C" __declspec(dllexport) void _stdcall OpenSpritesheetFile(HWND dialogPa
 	g_spriteHeight = g_spritesheetBitmapData.Size.height;
 
 	UpdateSpritesheetRects();
+
+	g_windowTitleHelper.SetOpenFileName(dialogParent, g_spritesheetFilePath);
 }
 
 extern "C" __declspec(dllexport) void _stdcall Paint()
@@ -599,25 +653,31 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 	}
 }
 
-extern "C" __declspec(dllexport) void _stdcall ZoomIn()
+extern "C" __declspec(dllexport) void _stdcall ZoomIn(HWND parentDialog)
 {
 	if (g_zoomIndex >= _countof(g_zoomPercents) - 1)
 		return;
 
 	g_zoomIndex++;
+
+	g_windowTitleHelper.SetZoomFactor(parentDialog, g_zoomPercentStrings[g_zoomIndex]);
 }
 
-extern "C" __declspec(dllexport) void _stdcall ZoomOut()
+extern "C" __declspec(dllexport) void _stdcall ZoomOut(HWND parentDialog)
 {
 	if (g_zoomIndex <= 0)
 		return;
 
 	g_zoomIndex--;
+
+	g_windowTitleHelper.SetZoomFactor(parentDialog, g_zoomPercentStrings[g_zoomIndex]);
 }
 
-extern "C" __declspec(dllexport) void _stdcall ResetZoom()
+extern "C" __declspec(dllexport) void _stdcall ResetZoom(HWND parentDialog)
 {
 	g_zoomIndex = g_defaultZoomIndex;
+
+	g_windowTitleHelper.SetZoomFactor(parentDialog, g_zoomPercentStrings[g_zoomIndex]);
 }
 
 extern "C" __declspec(dllexport) void _stdcall ReloadImage()

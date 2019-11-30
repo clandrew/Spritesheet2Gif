@@ -17,7 +17,7 @@ namespace Spritesheet2Gif
 
             canvasGraphics = canvas.CreateGraphics();
             canvasHdc = canvasGraphics.GetHdc();
-            if (!Native.Initialize(canvas.Width, canvas.Height, canvasHdc))
+            if (!Native.Initialize(canvas.Width, canvas.Height, this.Handle, canvasHdc))
             {
                 this.Load += ErrorOnLoad;
             }
@@ -200,19 +200,19 @@ namespace Spritesheet2Gif
 
         private void ZoomInToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Native.ZoomIn();
+            Native.ZoomIn(this.Handle);
             Native.Paint();
         }
 
         private void ZoomOutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Native.ZoomOut();
+            Native.ZoomOut(this.Handle);
             Native.Paint();
         }
 
         private void ResetZoomToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Native.ResetZoom();
+            Native.ResetZoom(this.Handle);
             Native.Paint();
         }
 
@@ -227,7 +227,7 @@ namespace Spritesheet2Gif
 class Native
 {
     [DllImport("Native.dll")]
-    public static extern bool Initialize(int clientWidth, int clientHeight, IntPtr handle);
+    public static extern bool Initialize(int clientWidth, int clientHeight, IntPtr parentDialog, IntPtr handle);
     [DllImport("Native.dll")]
     public static extern void OnResize(int clientWidth, int clientHeight, IntPtr handle);
 
@@ -261,13 +261,13 @@ class Native
     public static extern void SaveGif(IntPtr parentDialog, int animationSpeed, int loopCount, int gifWidth, int gifHeight);
 
     [DllImport("Native.dll")]
-    public static extern void ZoomIn();
+    public static extern void ZoomIn(IntPtr parentDialog);
 
     [DllImport("Native.dll")]
-    public static extern void ZoomOut();
+    public static extern void ZoomOut(IntPtr parentDialog);
 
     [DllImport("Native.dll")]
-    public static extern void ResetZoom();
+    public static extern void ResetZoom(IntPtr parentDialog);
 
     [DllImport("Native.dll")]
     public static extern void ReloadImage();
