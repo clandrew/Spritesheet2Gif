@@ -10,7 +10,10 @@ Features:
 * Ability to scrub through frames
 * Zoom in / out
 * Option for configuring the animation speed
+* Option to reload spritesheet from disk
 * Ability to save GIF at a different size than the source sprite size
+
+Can be handy for creating animated sprites even if you're not saving GIFs.
 
 ## Build
 The code is organized as a Visual Studio 2019 solution. The solution consists of two projects.
