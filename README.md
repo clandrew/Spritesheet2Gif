@@ -10,6 +10,7 @@ Features:
 * Ability to scrub through frames
 * Zoom in / out
 * Option for configuring the animation speed
+* Ability to save GIF at a different size than the source sprite size
 
 ## Build
 The code is organized as a Visual Studio 2019 solution. The solution consists of two projects.
