@@ -231,7 +231,7 @@ void LoadSpritesheetFileImpl()
 	if (FAILED(spConverter->CopyPixels(
 		NULL,
 		g_spritesheetBitmapData.Size.width * sizeof(UINT),
-		g_spritesheetBitmapData.DestBuffer.capacity() * sizeof(UINT),
+		static_cast<UINT>(g_spritesheetBitmapData.DestBuffer.size()) * sizeof(UINT),
 		(BYTE*)& g_spritesheetBitmapData.DestBuffer[0])))
 	{
 		return;
@@ -353,7 +353,7 @@ extern "C" __declspec(dllexport) void _stdcall PreviousSprite()
 	}
 	else
 	{
-		g_spriteIndex = g_spritesheetRects.size() - 1;
+		g_spriteIndex = static_cast<int>(g_spritesheetRects.size()) - 1;
 	}
 }
 
@@ -382,7 +382,7 @@ void EnsureTimerStopped()
 void CALLBACK TimerProc(
 	HWND hwnd,
 	UINT message,
-	UINT idTimer,
+    UINT_PTR idTimer,
 	DWORD dwTime)
 {
 	if (g_autoplay)
@@ -560,7 +560,7 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 		return;
 	}
 
-	int frameCount = g_spritesheetRects.size();
+	int frameCount = static_cast<int>(g_spritesheetRects.size());
 
 	for (int i = 0; i < frameCount; ++i)
 	{
