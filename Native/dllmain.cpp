@@ -157,11 +157,11 @@ void UpdateSpritesheetRects()
 		for (UINT x = 0; x < sheetWidth; x += g_spriteWidth)
 		{
 			D2D1_RECT_F rect;
-			rect.left = x;
-			rect.right = x + g_spriteWidth;
+			rect.left = static_cast<float>(x);
+			rect.right = rect.left + static_cast<float>(g_spriteWidth);
 			rect.right = min(rect.right, sheetWidth);
-			rect.top = y;
-			rect.bottom = y + g_spriteHeight;
+			rect.top = static_cast<float>(y);
+			rect.bottom = rect.top + g_spriteHeight;
 			rect.bottom = min(rect.bottom, sheetHeight);
 			g_spritesheetRects.push_back(rect);
 		}
@@ -308,7 +308,7 @@ extern "C" __declspec(dllexport) void _stdcall Paint()
 
 		D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
 		
-		D2D1_RECT_F destRect = D2D1::RectF(0, 0, g_spriteWidth, g_spriteHeight);
+		D2D1_RECT_F destRect = D2D1::RectF(0, 0, static_cast<float>(g_spriteWidth), static_cast<float>(g_spriteHeight));
 		D2D1_RECT_F sourceRect = g_spritesheetRects[g_spriteIndex];
 		g_renderTarget->DrawBitmap(
 			g_d2dSpritesheetBitmap.Get(), 
@@ -359,7 +359,8 @@ extern "C" __declspec(dllexport) void _stdcall PreviousSprite()
 
 extern "C" __declspec(dllexport) void _stdcall NextSprite()
 {
-	if (g_spriteIndex < g_spritesheetRects.size() - 1)
+    assert(g_spritesheetRects.size() <= INT_MAX);
+	if (g_spriteIndex < static_cast<int>(g_spritesheetRects.size()) - 1)
 	{
 		++g_spriteIndex;
 	}
@@ -615,7 +616,7 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 
 		wicBitmapRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::CornflowerBlue));
 
-		D2D1_RECT_F destRect = D2D1::RectF(0, 0, gifWidth, gifHeight);
+		D2D1_RECT_F destRect = D2D1::RectF(0, 0, static_cast<float>(gifWidth), static_cast<float>(gifHeight));
 		D2D1_RECT_F sourceRect = g_spritesheetRects[i];
 		wicBitmapRenderTarget->DrawBitmap(
 			wicCompatibleSpritesheet.Get(), 
