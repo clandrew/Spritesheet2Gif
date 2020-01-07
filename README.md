@@ -21,6 +21,9 @@ The frame scrubbing can be handy for creating animated sprites even if you're no
 
 The program runs standalone without an installer.
 
+## Release
+You don't need to build the code to run it. Download the release from the [releases page](https://github.com/clandrew/Spritesheet2Gif/releases).
+
 ## Build
 The code is organized as a Visual Studio 2019 solution. The solution consists of two projects.
 * Spritesheet2Gif - This is a .NET exe, a Windows Forms program written in C#. It's responsible for the UI.
