@@ -26,7 +26,7 @@ You don't need to build the code to run it. Download the release from the [relea
 
 ## Build
 The code is organized as a Visual Studio 2019 solution. The solution consists of two projects.
-* Spritesheet2Gif - This is a .NET exe, a Windows Forms program written in C#. It's responsible for the UI.
-* Native - This is a DLL written in C++. It's responsible for image encoding and decoding using WIC.
+* Spritesheet2Gif - This is a .NET exe, a Windows Forms program written in C#. It has the UI.
+* Native - This is a DLL written in C++. It handles image encoding and decoding using WIC.
 
 The solution is built for x86 architecture. Tested on Windows 10 May 2019 Update.
