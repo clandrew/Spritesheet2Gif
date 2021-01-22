@@ -23,6 +23,7 @@ The program runs standalone without an installer.
 
 ## Release
 You don't need to build the code to run it. Download the release from the [releases page](https://github.com/clandrew/Spritesheet2Gif/releases).
+
 The program runs on x86-64-based Windows environments. Tested on Windows 10.
 
 ## Build
