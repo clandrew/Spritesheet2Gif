@@ -323,6 +323,9 @@ extern "C" __declspec(dllexport) void _stdcall Paint()
 
 extern "C" __declspec(dllexport) int _stdcall GetSpritesheetWidth()
 {
+	if (!g_d2dSpritesheetBitmap)
+		return 0;
+
 	D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
 	return static_cast<int>(spritesheetSize.width);
 }
