@@ -10,6 +10,7 @@ namespace Spritesheet2Gif
         Graphics canvasGraphics;
         IntPtr canvasHdc;
         bool autoplay;
+        bool dbgAutoOpen;
 
         public Form1()
         {
@@ -29,12 +30,19 @@ namespace Spritesheet2Gif
             zoomOutToolStripMenuItem.Enabled = false;
             resetZoomToolStripMenuItem.Enabled = false;
             refreshToolStripMenuItem.Enabled = false;
+
+            //dbgAutoOpen = true;
+
+#if DEBUG
+            if (dbgAutoOpen)
+            {
+                Native.AutoOpenSpritesheetFile(this.Handle);
+                AfterOpen_EnableUI();
+            }
+#endif
         }
-
-        private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
+        private void AfterOpen_EnableUI()
         {
-            Native.OpenSpritesheetFile(this.Handle);
-
             int w = Native.GetSpritesheetWidth();
             if (w == 0)
                 return;
@@ -88,6 +96,13 @@ namespace Spritesheet2Gif
             loopForever.Select();
 
             Native.Paint();
+        }
+
+        private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Native.OpenSpritesheetFile(this.Handle);
+
+            AfterOpen_EnableUI();
         }
 
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -236,6 +251,8 @@ class Native
 
     [DllImport("Native.dll")]
     public static extern void OpenSpritesheetFile(IntPtr parentDialog);
+    [DllImport("Native.dll")]
+    public static extern void AutoOpenSpritesheetFile(IntPtr parentDialog);
     [DllImport("Native.dll")]
     public static extern int GetSpritesheetWidth();
     [DllImport("Native.dll")]

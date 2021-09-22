@@ -249,6 +249,21 @@ void LoadSpritesheetFileImpl()
 	}
 }
 
+void OpenSpritesheetFileImpl(HWND dialogParent, std::wstring fileName)
+{
+	g_spritesheetFilePath = fileName;
+
+	LoadSpritesheetFileImpl();
+
+	g_spriteWidth = g_spritesheetBitmapData.Size.width;
+	g_spriteHeight = g_spritesheetBitmapData.Size.height;
+
+	UpdateSpritesheetRects();
+
+	g_windowTitleHelper.SetOpenFileName(dialogParent, g_spritesheetFilePath);
+
+}
+
 extern "C" __declspec(dllexport) void _stdcall OpenSpritesheetFile(HWND dialogParent)
 {
 	TCHAR documentsPath[MAX_PATH];
@@ -283,17 +298,17 @@ extern "C" __declspec(dllexport) void _stdcall OpenSpritesheetFile(HWND dialogPa
 	if (GetOpenFileName(&ofn) == 0)
 		return;
 
-	g_spritesheetFilePath = ofn.lpstrFile;
-
-	LoadSpritesheetFileImpl();
-
-	g_spriteWidth = g_spritesheetBitmapData.Size.width;
-	g_spriteHeight = g_spritesheetBitmapData.Size.height;
-
-	UpdateSpritesheetRects();
-
-	g_windowTitleHelper.SetOpenFileName(dialogParent, g_spritesheetFilePath);
+	OpenSpritesheetFileImpl(dialogParent, ofn.lpstrFile);
 }
+
+#if _DEBUG
+extern "C" __declspec(dllexport) void _stdcall AutoOpenSpritesheetFile(HWND dialogParent)
+{
+	std::wstring testFilename = L"D:\\repos\\Spritesheet2Gif\\Debug\\merged.png";
+
+	OpenSpritesheetFileImpl(dialogParent, testFilename);
+}
+#endif
 
 extern "C" __declspec(dllexport) void _stdcall Paint()
 {
