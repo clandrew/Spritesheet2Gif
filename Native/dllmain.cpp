@@ -51,15 +51,15 @@ struct WindowTitleHelper
 	}
 
 public:
-	void Initialize(HWND dialogParent)
+	void Initialize(HWND dialogParent, wchar_t const* zoomFactorString)
 	{
 		m_programName = L"Spritesheet2Gif";
-		m_zoomFactor = L"100%";
+		m_zoomFactor = zoomFactorString;
 	}
 
-	void SetZoomFactor(HWND dialogParent, wchar_t const* f)
+	void SetZoomFactor(HWND dialogParent, wchar_t const* zoomFactorString)
 	{
-		m_zoomFactor = f;
+		m_zoomFactor = zoomFactorString;
 		UpdateWindowTitle(dialogParent);
 	}
 
@@ -80,7 +80,7 @@ WindowTitleHelper g_windowTitleHelper;
 static const float g_zoomPercents[] = {6.75f, 12.5f, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1600};
 static const wchar_t* g_zoomPercentStrings[] = {L"6.75f%", L"12.5f%", L"25%", L"50%", L"100%", L"200%", L"300%", L"400%", L"500%", L"600%", L"700%", L"800%", L"1000%", L"1200%", L"1400%", L"1600"};
 
-static const int g_defaultZoomIndex = 3;
+static const int g_defaultZoomIndex = 4;
 int g_zoomIndex;
 
 struct SpritesheetBitmapData
@@ -130,7 +130,7 @@ extern "C" __declspec(dllexport) bool _stdcall Initialize(int clientWidth, int c
 	g_autoplay = false;
 	g_zoomIndex = g_defaultZoomIndex;
 
-	g_windowTitleHelper.Initialize(parentDialog);
+	g_windowTitleHelper.Initialize(parentDialog, g_zoomPercentStrings[g_zoomIndex]);
 	
 	return true;
 }
