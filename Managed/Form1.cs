@@ -29,12 +29,13 @@ namespace Spritesheet2Gif
             zoomOutToolStripMenuItem.Enabled = false;
             resetZoomToolStripMenuItem.Enabled = false;
             refreshToolStripMenuItem.Enabled = false;
+
+            //Native.OpenSpritesheetFile(this.Handle);
+            //AfterOpen_EnableUI();
         }
 
-        private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
+        private void AfterOpen_EnableUI()
         {
-            Native.OpenSpritesheetFile(this.Handle);
-
             int w = Native.GetSpritesheetWidth();
             if (w == 0)
                 return;
@@ -88,6 +89,13 @@ namespace Spritesheet2Gif
             loopForever.Select();
 
             Native.Paint();
+        }
+
+        private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Native.OpenSpritesheetFile(this.Handle);
+
+            AfterOpen_EnableUI();
         }
 
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e)

@@ -23,6 +23,10 @@ ComPtr<IWICImagingFactory> g_wicImagingFactory;
 ComPtr<ID2D1Factory7> g_d2dFactory;
 ComPtr<ID2D1DCRenderTarget> g_renderTarget;
 ComPtr<ID2D1Bitmap> g_d2dSpritesheetBitmap;
+
+HGLOBAL g_svgDocumentAlloc;
+ComPtr<ID2D1SvgDocument> g_svgDocument;
+
 std::vector<D2D1_RECT_F> g_spritesheetRects;
 std::wstring g_spritesheetFilePath;
 int g_spriteIndex;
@@ -65,7 +69,7 @@ public:
 
 	void SetOpenFileName(HWND dialogParent, std::wstring fullPath)
 	{
-		size_t delimiterIndex = g_spritesheetFilePath.rfind('\\');
+		size_t delimiterIndex = g_spritesheetFilePath.rfind(L'\\');
 		assert(delimiterIndex < g_spritesheetFilePath.size());
 		if (delimiterIndex >= g_spritesheetFilePath.size())
 			return;
@@ -145,9 +149,22 @@ extern "C" __declspec(dllexport) void _stdcall OnResize(int clientWidth, int cli
 
 void UpdateSpritesheetRects()
 {
-	D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
-
 	g_spritesheetRects.clear();
+
+	D2D1_SIZE_F spritesheetSize{};
+
+	if (g_d2dSpritesheetBitmap)
+	{
+		spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
+	}
+	else if (g_svgDocument)
+	{
+		spritesheetSize = g_svgDocument->GetViewportSize();
+	}
+	else
+	{
+		return;
+	}
 
 	UINT sheetWidth = static_cast<int>(spritesheetSize.width);
 	UINT sheetHeight = static_cast<int>(spritesheetSize.height);
@@ -195,6 +212,47 @@ void LoadSpritesheetFileImpl()
 		GENERIC_READ,
 		WICDecodeMetadataCacheOnLoad, &spDecoder)))
 	{
+		// fallback: try to load as svg
+		ComPtr<ID2D1DeviceContext5> deviceContext5;
+		if (FAILED(g_renderTarget.As(&deviceContext5)))
+		{
+			return;
+		}
+
+		// Load the file into memory
+		FILE* file{};
+		_wfopen_s(&file, g_spritesheetFilePath.c_str(), L"rb");
+
+		fseek(file, 0, SEEK_END);
+		long fileLength = ftell(file);
+
+		g_svgDocumentAlloc = GlobalAlloc(0, fileLength);
+		if (!g_svgDocumentAlloc)
+		{
+			return;
+		}
+
+		// Copy file into allocation
+		fseek(file, 0, SEEK_SET);
+		
+		void* locked = GlobalLock(g_svgDocumentAlloc);
+
+		fread(locked, 1, fileLength, file);
+		fclose(file);
+
+		ComPtr<IStream> stream;
+		if (FAILED(CreateStreamOnHGlobal(g_svgDocumentAlloc, TRUE, &stream)))
+		{
+			return;
+		}
+
+		if (FAILED(deviceContext5->CreateSvgDocument(stream.Get(), D2D1::SizeF(1000, 1000), &g_svgDocument)))
+		{
+			return;
+		}
+
+		GlobalUnlock(g_svgDocumentAlloc);
+
 		return;
 	}
 
@@ -284,11 +342,21 @@ extern "C" __declspec(dllexport) void _stdcall OpenSpritesheetFile(HWND dialogPa
 		return;
 
 	g_spritesheetFilePath = ofn.lpstrFile;
+	//g_spritesheetFilePath = L"D:\\repos\\Spritesheet2Gif\\test.svg";
 
 	LoadSpritesheetFileImpl();
 
-	g_spriteWidth = g_spritesheetBitmapData.Size.width;
-	g_spriteHeight = g_spritesheetBitmapData.Size.height;
+	if (g_d2dSpritesheetBitmap)
+	{
+		g_spriteWidth = g_spritesheetBitmapData.Size.width;
+		g_spriteHeight = g_spritesheetBitmapData.Size.height;
+	}
+	else if (g_svgDocument)
+	{
+		D2D1_SIZE_F size = g_svgDocument->GetViewportSize();
+		g_spriteWidth = size.width;
+		g_spriteHeight = size.height;
+	}
 
 	UpdateSpritesheetRects();
 
@@ -305,8 +373,6 @@ extern "C" __declspec(dllexport) void _stdcall Paint()
 		float zoomFactor = g_zoomPercents[g_zoomIndex] / 100.0f;
 		D2D1_MATRIX_3X2_F transform = D2D1::Matrix3x2F::Scale(zoomFactor, zoomFactor);
 		g_renderTarget->SetTransform(transform);
-
-		D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
 		
 		D2D1_RECT_F destRect = D2D1::RectF(0, 0, static_cast<float>(g_spriteWidth), static_cast<float>(g_spriteHeight));
 		D2D1_RECT_F sourceRect = g_spritesheetRects[g_spriteIndex];
@@ -318,22 +384,69 @@ extern "C" __declspec(dllexport) void _stdcall Paint()
 			sourceRect);
 	}
 
+	if (g_svgDocument)
+	{
+		ComPtr<ID2D1DeviceContext5> deviceContext5;
+		if (FAILED(g_renderTarget.As(&deviceContext5)))
+		{
+			return;
+		}
+
+		D2D1_RECT_F sourceRect = g_spritesheetRects[g_spriteIndex];
+
+
+		D2D1_MATRIX_3X2_F transform;
+		transform = D2D1::Matrix3x2F::Translation(D2D1::SizeF(-sourceRect.left, sourceRect.top));	// center at the origin
+		deviceContext5->SetTransform(transform);
+
+		D2D1_RECT_F clipRect = sourceRect; 
+		deviceContext5->PushAxisAlignedClip(clipRect, D2D1_ANTIALIAS_MODE_ALIASED);
+
+		deviceContext5->DrawSvgDocument(g_svgDocument.Get());
+
+		deviceContext5->PopAxisAlignedClip();
+
+		deviceContext5->SetTransform(D2D1::Matrix3x2F::Identity());
+
+	}
+
 	VerifyHR(g_renderTarget->EndDraw());	
 }
 
 extern "C" __declspec(dllexport) int _stdcall GetSpritesheetWidth()
 {
-	if (!g_d2dSpritesheetBitmap)
+	if (g_d2dSpritesheetBitmap)
+	{
+		D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
+		return static_cast<int>(spritesheetSize.width);
+	}
+	else if (g_svgDocument)
+	{
+		D2D1_SIZE_F spritesheetSize = g_svgDocument->GetViewportSize();
+		return static_cast<int>(spritesheetSize.width);
+	}
+	else
+	{
 		return 0;
-
-	D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
-	return static_cast<int>(spritesheetSize.width);
+	}
 }
 
 extern "C" __declspec(dllexport) int _stdcall GetSpritesheetHeight()
 {
-	D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
-	return static_cast<int>(spritesheetSize.height);
+	if (g_d2dSpritesheetBitmap)
+	{
+		D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
+		return static_cast<int>(spritesheetSize.height);
+	}
+	else if (g_svgDocument)
+	{
+		D2D1_SIZE_F spritesheetSize = g_svgDocument->GetViewportSize();
+		return static_cast<int>(spritesheetSize.height);
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 extern "C" __declspec(dllexport) void _stdcall SetSpriteWidth(int w)
