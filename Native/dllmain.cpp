@@ -3,6 +3,8 @@
 
 using Microsoft::WRL::ComPtr;
 
+#include <limits>
+
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved
@@ -19,10 +21,46 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     return TRUE;
 }
 
+struct GlobalAllocation
+{
+	void* m_locked;
+	HGLOBAL m_handle;
+	ComPtr<IStream> m_stream;
+
+	GlobalAllocation() : m_handle(0), m_locked(0) {}
+
+	~GlobalAllocation()
+	{
+		if (m_handle)
+		{
+			Uninitialize();
+		}
+	}
+
+	void Initialize(size_t sizeInBytes)
+	{
+		m_handle = GlobalAlloc(0, sizeInBytes);
+		m_locked = GlobalLock(m_handle);
+	}
+
+	void Uninitialize()
+	{
+		GlobalUnlock(m_handle);
+		GlobalFree(m_handle);
+		m_locked = 0;
+		m_handle = 0;
+	}
+};
+
 ComPtr<IWICImagingFactory> g_wicImagingFactory;
 ComPtr<ID2D1Factory7> g_d2dFactory;
 ComPtr<ID2D1DCRenderTarget> g_renderTarget;
 ComPtr<ID2D1Bitmap> g_d2dSpritesheetBitmap;
+
+GlobalAllocation g_svgDocumentAlloc;
+ComPtr<ID2D1SvgDocument> g_svgDocument;
+D2D1_SVG_VIEWBOX g_svgViewBox{};
+
 std::vector<D2D1_RECT_F> g_spritesheetRects;
 std::wstring g_spritesheetFilePath;
 int g_spriteIndex;
@@ -145,24 +183,41 @@ extern "C" __declspec(dllexport) void _stdcall OnResize(int clientWidth, int cli
 
 void UpdateSpritesheetRects()
 {
-	D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
+	D2D1_SIZE_F spritesheetSize{};
+	float left = 0;
+	float top = 0;
+
+	if (g_d2dSpritesheetBitmap)
+	{
+		spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
+	}
+	else if (g_svgDocument)
+	{
+		spritesheetSize = D2D1::SizeF(g_svgViewBox.width, g_svgViewBox.height);
+		left = g_svgViewBox.x;
+		top = g_svgViewBox.y;
+	}
+	else
+	{
+		return;
+	}
 
 	g_spritesheetRects.clear();
 
-	UINT sheetWidth = static_cast<int>(spritesheetSize.width);
-	UINT sheetHeight = static_cast<int>(spritesheetSize.height);
-
-	for (UINT y = 0; y < sheetHeight; y += g_spriteHeight)
+	for (float y = top; y < spritesheetSize.height; y += (float)g_spriteHeight)
 	{
-		for (UINT x = 0; x < sheetWidth; x += g_spriteWidth)
+		for (float x = 0; x < spritesheetSize.width; x += static_cast<float>(g_spriteWidth))
 		{
 			D2D1_RECT_F rect;
-			rect.left = static_cast<float>(x);
+
+			rect.left = x;
 			rect.right = rect.left + static_cast<float>(g_spriteWidth);
-			rect.right = min(rect.right, sheetWidth);
-			rect.top = static_cast<float>(y);
-			rect.bottom = rect.top + g_spriteHeight;
-			rect.bottom = min(rect.bottom, sheetHeight);
+			rect.right = min(rect.right, spritesheetSize.width);
+
+			rect.top = y;
+			rect.bottom = rect.top + static_cast<float>(g_spriteHeight);
+			rect.bottom = min(rect.bottom, spritesheetSize.height);
+
 			g_spritesheetRects.push_back(rect);
 		}
 	}
@@ -184,10 +239,73 @@ void EnsureWicImagingFactory()
 	}
 }
 
-void LoadSpritesheetFileImpl()
+void TryLoadAsSvg(std::wstring svgFilePath)
 {
-	EnsureWicImagingFactory();
+	FILE* file{};
+	if (_wfopen_s(&file, svgFilePath.c_str(), L"rb") != 0)
+	{
+		return;
+	}
 
+	if (fseek(file, 0, SEEK_END) != 0)
+	{
+		return;
+	}
+
+	long fileLength = ftell(file);
+
+	if (fileLength == 0)
+	{
+		return;
+	}
+
+	g_svgDocumentAlloc.Initialize(fileLength);
+
+	if (fseek(file, 0, SEEK_SET) != 0)
+	{
+		return;
+	}
+
+	if (fread(g_svgDocumentAlloc.m_locked, 1, fileLength, file) != fileLength)
+	{
+		return;
+	}
+
+	if (fclose(file) != 0)
+	{
+		return;
+	}
+
+	if (FAILED(CreateStreamOnHGlobal(g_svgDocumentAlloc.m_handle, TRUE, &g_svgDocumentAlloc.m_stream)))
+	{
+		return;
+	}
+
+	ComPtr<ID2D1DeviceContext5> deviceContext5;
+	if (FAILED(g_renderTarget.As(&deviceContext5)))
+	{
+		return;
+	}
+
+	if (FAILED(deviceContext5->CreateSvgDocument(
+		g_svgDocumentAlloc.m_stream.Get(),
+		D2D1::SizeF(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()),
+		&g_svgDocument)))
+	{
+		return;
+	}
+
+	ComPtr<ID2D1SvgElement> rootNode;
+	g_svgDocument->GetRoot(&rootNode);
+
+	if (FAILED(rootNode->GetAttributeValue(L"viewBox", D2D1_SVG_ATTRIBUTE_POD_TYPE_VIEWBOX, &g_svgViewBox, sizeof(g_svgViewBox))))
+	{
+		return;
+	}
+}
+
+bool TryLoadAsRaster(std::wstring fileName)
+{
 	ComPtr<IWICBitmapDecoder> spDecoder;
 	if (FAILED(g_wicImagingFactory->CreateDecoderFromFilename(
 		g_spritesheetFilePath.c_str(),
@@ -195,20 +313,20 @@ void LoadSpritesheetFileImpl()
 		GENERIC_READ,
 		WICDecodeMetadataCacheOnLoad, &spDecoder)))
 	{
-		return;
+		return false;
 	}
 
 	ComPtr<IWICBitmapFrameDecode> spSource;
 	if (FAILED(spDecoder->GetFrame(0, &spSource)))
 	{
-		return;
+		return false;
 	}
 
 	// Convert the image format to 32bppPBGRA, equiv to DXGI_FORMAT_B8G8R8A8_UNORM
 	ComPtr<IWICFormatConverter> spConverter;
 	if (FAILED(g_wicImagingFactory->CreateFormatConverter(&spConverter)))
 	{
-		return;
+		return false;
 	}
 
 	if (FAILED(spConverter->Initialize(
@@ -219,12 +337,12 @@ void LoadSpritesheetFileImpl()
 		0.f,
 		WICBitmapPaletteTypeMedianCut)))
 	{
-		return;
+		return false;
 	}
 
 	if (FAILED(spConverter->GetSize(&g_spritesheetBitmapData.Size.width, &g_spritesheetBitmapData.Size.height)))
 	{
-		return;
+		return false;
 	}
 
 	g_spritesheetBitmapData.DestBuffer.resize(g_spritesheetBitmapData.Size.width * g_spritesheetBitmapData.Size.height);
@@ -232,9 +350,9 @@ void LoadSpritesheetFileImpl()
 		NULL,
 		g_spritesheetBitmapData.Size.width * sizeof(UINT),
 		static_cast<UINT>(g_spritesheetBitmapData.DestBuffer.size()) * sizeof(UINT),
-		(BYTE*)& g_spritesheetBitmapData.DestBuffer[0])))
+		(BYTE*)&g_spritesheetBitmapData.DestBuffer[0])))
 	{
-		return;
+		return false;
 	}
 
 	D2D1_BITMAP_PROPERTIES bitmapProperties = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
@@ -245,8 +363,23 @@ void LoadSpritesheetFileImpl()
 		bitmapProperties,
 		&g_d2dSpritesheetBitmap)))
 	{
-		return;
+		return false;
 	}
+
+	return true;
+}
+
+void LoadSpritesheetFileImpl()
+{
+	EnsureWicImagingFactory();
+
+	if (!TryLoadAsRaster(g_spritesheetFilePath.c_str()))
+	{
+		TryLoadAsSvg(g_spritesheetFilePath.c_str());
+	}
+
+	return;
+
 }
 
 void OpenSpritesheetFileImpl(HWND dialogParent, std::wstring fileName)
@@ -255,8 +388,16 @@ void OpenSpritesheetFileImpl(HWND dialogParent, std::wstring fileName)
 
 	LoadSpritesheetFileImpl();
 
-	g_spriteWidth = g_spritesheetBitmapData.Size.width;
-	g_spriteHeight = g_spritesheetBitmapData.Size.height;
+	if (g_d2dSpritesheetBitmap)
+	{
+		g_spriteWidth = g_spritesheetBitmapData.Size.width;
+		g_spriteHeight = g_spritesheetBitmapData.Size.height;
+	}
+	else if (g_svgDocument)
+	{
+		g_spriteWidth = g_svgViewBox.width;
+		g_spriteHeight = g_svgViewBox.height;
+	}
 
 	UpdateSpritesheetRects();
 
@@ -304,7 +445,7 @@ extern "C" __declspec(dllexport) void _stdcall OpenSpritesheetFile(HWND dialogPa
 #if _DEBUG
 extern "C" __declspec(dllexport) void _stdcall AutoOpenSpritesheetFile(HWND dialogParent)
 {
-	std::wstring testFilename = L"D:\\repos\\Spritesheet2Gif\\Debug\\merged.png";
+	std::wstring testFilename = L"D:\\repos\\Spritesheet2Gif\\Debug\\bunny.svg";
 
 	OpenSpritesheetFileImpl(dialogParent, testFilename);
 }
@@ -315,6 +456,8 @@ extern "C" __declspec(dllexport) void _stdcall Paint()
 	g_renderTarget->BeginDraw();
 	g_renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
 
+	D2D1_RECT_F sourceRect = g_spritesheetRects[g_spriteIndex];
+
 	if (g_d2dSpritesheetBitmap)
 	{
 		float zoomFactor = g_zoomPercents[g_zoomIndex] / 100.0f;
@@ -324,7 +467,6 @@ extern "C" __declspec(dllexport) void _stdcall Paint()
 		D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
 		
 		D2D1_RECT_F destRect = D2D1::RectF(0, 0, static_cast<float>(g_spriteWidth), static_cast<float>(g_spriteHeight));
-		D2D1_RECT_F sourceRect = g_spritesheetRects[g_spriteIndex];
 		g_renderTarget->DrawBitmap(
 			g_d2dSpritesheetBitmap.Get(), 
 			destRect, 
@@ -332,23 +474,63 @@ extern "C" __declspec(dllexport) void _stdcall Paint()
 			D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR, 
 			sourceRect);
 	}
+	else if (g_svgDocument)
+	{
+		ComPtr<ID2D1DeviceContext5> deviceContext5;
+		if (FAILED(g_renderTarget.As(&deviceContext5)))
+		{
+			return;
+		}
+
+		D2D1_MATRIX_3X2_F transform;
+		transform = D2D1::Matrix3x2F::Translation(D2D1::SizeF(-sourceRect.left, sourceRect.top));	// center at the origin
+		deviceContext5->SetTransform(transform);
+
+		D2D1_RECT_F clipRect = sourceRect;
+		deviceContext5->PushAxisAlignedClip(clipRect, D2D1_ANTIALIAS_MODE_ALIASED);
+
+		deviceContext5->DrawSvgDocument(g_svgDocument.Get());
+
+		deviceContext5->PopAxisAlignedClip();
+
+		deviceContext5->SetTransform(D2D1::Matrix3x2F::Identity());
+	}
 
 	VerifyHR(g_renderTarget->EndDraw());	
 }
 
 extern "C" __declspec(dllexport) int _stdcall GetSpritesheetWidth()
 {
-	if (!g_d2dSpritesheetBitmap)
+	if (g_d2dSpritesheetBitmap)
+	{
+		D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
+		return static_cast<int>(spritesheetSize.width);
+	}
+	else if (g_svgDocument)
+	{
+		return static_cast<int>(g_svgViewBox.width);
+	}
+	else
+	{
 		return 0;
-
-	D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
-	return static_cast<int>(spritesheetSize.width);
+	}
 }
 
 extern "C" __declspec(dllexport) int _stdcall GetSpritesheetHeight()
 {
-	D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
-	return static_cast<int>(spritesheetSize.height);
+	if (g_d2dSpritesheetBitmap)
+	{
+		D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
+		return static_cast<int>(spritesheetSize.height);
+	}
+	else if (g_svgDocument)
+	{
+		return static_cast<int>(g_svgViewBox.height);
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 extern "C" __declspec(dllexport) void _stdcall SetSpriteWidth(int w)
@@ -556,27 +738,106 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 		return;
 	}
 
-	ComPtr<ID2D1RenderTarget> wicBitmapRenderTarget;
+	ComPtr<ID2D1RenderTarget> singleSpriteWicBitmapRenderTarget;
 	D2D1_RENDER_TARGET_PROPERTIES d2dRenderTargetProperties =
 		D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT, D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
 
-	if (FAILED(g_d2dFactory->CreateWicBitmapRenderTarget(singleSpriteWicBitmap.Get(), d2dRenderTargetProperties, &wicBitmapRenderTarget)))
+	if (FAILED(g_d2dFactory->CreateWicBitmapRenderTarget(singleSpriteWicBitmap.Get(), d2dRenderTargetProperties, &singleSpriteWicBitmapRenderTarget)))
 	{
 		return;
 	}
 
-	// Create a local copy of the spritesheet which is WIC target compatible.
+	// Create a local copy of the spritesheet which is WIC target compatible, to sample from.
 	ComPtr<ID2D1Bitmap> wicCompatibleSpritesheet;
 	D2D1_BITMAP_PROPERTIES bitmapProperties = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
-	if (FAILED(wicBitmapRenderTarget->CreateBitmap(
-		g_spritesheetBitmapData.Size,
-		&g_spritesheetBitmapData.DestBuffer[0],
-		g_spritesheetBitmapData.Size.width * sizeof(UINT),
-		bitmapProperties,
-		&wicCompatibleSpritesheet)))
+
+	// Create a wic bitmap depicting the loaded spritesheet
+	if (g_d2dSpritesheetBitmap)
 	{
-		return;
+		if (FAILED(singleSpriteWicBitmapRenderTarget->CreateBitmap(
+			g_spritesheetBitmapData.Size,
+			&g_spritesheetBitmapData.DestBuffer[0],
+			g_spritesheetBitmapData.Size.width * sizeof(UINT),
+			bitmapProperties,
+			&wicCompatibleSpritesheet)))
+		{
+			return;
+		}
 	}
+	if (g_svgDocument)
+	{
+		float spritesheetWidth = g_svgViewBox.width;
+		float spritesheetHeight = g_svgViewBox.height;
+
+		ComPtr<ID2D1DeviceContext> deviceContext6;
+		g_renderTarget.As(&deviceContext6);
+
+		D2D1_BITMAP_PROPERTIES1 lockableProperties = D2D1::BitmapProperties1(
+			D2D1_BITMAP_OPTIONS_CPU_READ | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
+			D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
+		ComPtr<ID2D1Bitmap1> lockable;
+		if (FAILED(deviceContext6->CreateBitmap(D2D1::SizeU(spritesheetWidth, spritesheetHeight), nullptr, 0, lockableProperties, &lockable)))
+		{
+			return;
+		}
+		g_renderTarget->BeginDraw();
+		g_renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
+
+		ComPtr<ID2D1DeviceContext5> deviceContext5;
+		if (FAILED(g_renderTarget.As(&deviceContext5)))
+		{
+			return;
+		}
+
+		D2D1_MATRIX_3X2_F transform;
+		transform = D2D1::Matrix3x2F::Translation(D2D1::SizeF(-g_svgViewBox.x, g_svgViewBox.y));
+		deviceContext5->SetTransform(transform);
+
+		D2D1_RECT_F clipRect = D2D1::RectF(g_svgViewBox.x, g_svgViewBox.y, g_svgViewBox.width, g_svgViewBox.height);
+		deviceContext5->PushAxisAlignedClip(clipRect, D2D1_ANTIALIAS_MODE_ALIASED);
+
+		deviceContext5->DrawSvgDocument(g_svgDocument.Get());
+
+		deviceContext5->PopAxisAlignedClip();
+
+		deviceContext5->SetTransform(D2D1::Matrix3x2F::Identity());
+
+		g_renderTarget->EndDraw();
+
+		D2D1_POINT_2U destPoint = D2D1::Point2U(0, 0);
+		D2D1_RECT_U sourceRect = D2D1::RectU(g_svgViewBox.x, g_svgViewBox.y, g_svgViewBox.width, g_svgViewBox.height);
+		if (FAILED(lockable->CopyFromRenderTarget(&destPoint, g_renderTarget.Get(), &sourceRect)))
+		{
+			return;
+		}
+
+		D2D1_MAPPED_RECT mappedRect{};
+		if (FAILED(lockable->Map(D2D1_MAP_OPTIONS_READ, &mappedRect)))
+		{
+			return;
+		}
+
+		D2D1_SIZE_U spritesheetSizeU = D2D1::SizeU(spritesheetWidth, spritesheetHeight);
+
+		if (FAILED(singleSpriteWicBitmapRenderTarget->CreateBitmap(
+			spritesheetSizeU,
+			mappedRect.bits,
+			mappedRect.pitch,
+			bitmapProperties,
+			&wicCompatibleSpritesheet)))
+		{
+			return;
+		}
+
+		if (FAILED(lockable->Unmap()))
+		{
+			return;
+		}
+
+		Paint();
+		
+	}
+
 
 	int frameCount = static_cast<int>(g_spritesheetRects.size());
 
@@ -630,20 +891,20 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 			return;
 		}
 
-		wicBitmapRenderTarget->BeginDraw();
+		singleSpriteWicBitmapRenderTarget->BeginDraw();
 
-		wicBitmapRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::CornflowerBlue));
+		singleSpriteWicBitmapRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::CornflowerBlue));
 
 		D2D1_RECT_F destRect = D2D1::RectF(0, 0, static_cast<float>(gifWidth), static_cast<float>(gifHeight));
 		D2D1_RECT_F sourceRect = g_spritesheetRects[i];
-		wicBitmapRenderTarget->DrawBitmap(
+		singleSpriteWicBitmapRenderTarget->DrawBitmap(
 			wicCompatibleSpritesheet.Get(), 
 			destRect, 
 			1.0f, 
 			D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR, 
 			sourceRect);
 
-		if (FAILED(wicBitmapRenderTarget->EndDraw()))
+		if (FAILED(singleSpriteWicBitmapRenderTarget->EndDraw()))
 		{
 			return;
 		}
@@ -706,6 +967,9 @@ extern "C" __declspec(dllexport) void _stdcall ReloadImage()
 
 extern "C" __declspec(dllexport) void _stdcall Uninitialize()
 {
+	g_svgDocumentAlloc.m_stream.Reset(); // Important- delete the SVG structures before the factory.
+	g_svgDocument.Reset();
+
 	g_d2dFactory.Reset();
 	g_renderTarget.Reset();
 	g_d2dSpritesheetBitmap.Reset();
