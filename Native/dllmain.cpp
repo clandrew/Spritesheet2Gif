@@ -65,7 +65,7 @@ public:
 
 	void SetOpenFileName(HWND dialogParent, std::wstring fullPath)
 	{
-		size_t delimiterIndex = g_spritesheetFilePath.rfind('\\');
+		size_t delimiterIndex = g_spritesheetFilePath.rfind(L'\\');
 		assert(delimiterIndex < g_spritesheetFilePath.size());
 		if (delimiterIndex >= g_spritesheetFilePath.size())
 			return;
