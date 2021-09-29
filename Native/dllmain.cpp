@@ -458,9 +458,10 @@ extern "C" __declspec(dllexport) void _stdcall Paint()
 
 	D2D1_RECT_F sourceRect = g_spritesheetRects[g_spriteIndex];
 
+	float zoomFactor = g_zoomPercents[g_zoomIndex] / 100.0f;
+
 	if (g_d2dSpritesheetBitmap)
 	{
-		float zoomFactor = g_zoomPercents[g_zoomIndex] / 100.0f;
 		D2D1_MATRIX_3X2_F transform = D2D1::Matrix3x2F::Scale(zoomFactor, zoomFactor);
 		g_renderTarget->SetTransform(transform);
 
@@ -483,7 +484,7 @@ extern "C" __declspec(dllexport) void _stdcall Paint()
 		}
 
 		D2D1_MATRIX_3X2_F transform;
-		transform = D2D1::Matrix3x2F::Translation(D2D1::SizeF(-sourceRect.left, sourceRect.top));	// center at the origin
+		transform = D2D1::Matrix3x2F::Translation(D2D1::SizeF(-sourceRect.left, -sourceRect.top)) * D2D1::Matrix3x2F::Scale(zoomFactor, zoomFactor);	
 		deviceContext5->SetTransform(transform);
 
 		D2D1_RECT_F clipRect = sourceRect;
