@@ -453,6 +453,9 @@ extern "C" __declspec(dllexport) void _stdcall AutoOpenSpritesheetFile(HWND dial
 
 extern "C" __declspec(dllexport) void _stdcall Paint()
 {
+	if (g_spritesheetRects.size() == 0)
+		return;
+
 	g_renderTarget->BeginDraw();
 	g_renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
 
