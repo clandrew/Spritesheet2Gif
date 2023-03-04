@@ -206,17 +206,17 @@ void UpdateSpritesheetRects()
 
 	for (float y = top; y < spritesheetSize.height; y += (float)g_spriteHeight)
 	{
-		for (float x = 0; x < spritesheetSize.width; x += static_cast<float>(g_spriteWidth))
+		for (float x = left; x < spritesheetSize.width; x += static_cast<float>(g_spriteWidth))
 		{
 			D2D1_RECT_F rect;
 
 			rect.left = x;
 			rect.right = rect.left + static_cast<float>(g_spriteWidth);
-			rect.right = min(rect.right, spritesheetSize.width);
+			//rect.right = min(rect.right, spritesheetSize.width);
 
 			rect.top = y;
 			rect.bottom = rect.top + static_cast<float>(g_spriteHeight);
-			rect.bottom = min(rect.bottom, spritesheetSize.height);
+			//rect.bottom = min(rect.bottom, spritesheetSize.height);
 
 			g_spritesheetRects.push_back(rect);
 		}
@@ -445,7 +445,7 @@ extern "C" __declspec(dllexport) void _stdcall OpenSpritesheetFile(HWND dialogPa
 #if _DEBUG
 extern "C" __declspec(dllexport) void _stdcall AutoOpenSpritesheetFile(HWND dialogParent)
 {
-	std::wstring testFilename = L"D:\\repos\\Spritesheet2Gif\\Debug\\bunny.svg";
+	std::wstring testFilename = L"D:\\repos\\Spritesheet2Gif\\Debug\\bunnyClip.svg";
 
 	OpenSpritesheetFileImpl(dialogParent, testFilename);
 }
@@ -482,19 +482,20 @@ extern "C" __declspec(dllexport) void _stdcall Paint()
 		{
 			return;
 		}
+		deviceContext5->SetTransform(D2D1::Matrix3x2F::Identity());
 
 		D2D1_MATRIX_3X2_F transform;
-		transform = D2D1::Matrix3x2F::Translation(D2D1::SizeF(-sourceRect.left, -sourceRect.top)) * D2D1::Matrix3x2F::Scale(zoomFactor, zoomFactor);	
-		deviceContext5->SetTransform(transform);
+		//transform = D2D1::Matrix3x2F::Translation(D2D1::SizeF(-sourceRect.left, -sourceRect.top)) * D2D1::Matrix3x2F::Scale(zoomFactor, zoomFactor);	
+		//deviceContext5->SetTransform(transform);
 
 		D2D1_RECT_F clipRect = sourceRect;
-		deviceContext5->PushAxisAlignedClip(clipRect, D2D1_ANTIALIAS_MODE_ALIASED);
+		//deviceContext5->PushAxisAlignedClip(clipRect, D2D1_ANTIALIAS_MODE_ALIASED);
 
 		deviceContext5->DrawSvgDocument(g_svgDocument.Get());
 
-		deviceContext5->PopAxisAlignedClip();
+		//deviceContext5->PopAxisAlignedClip();
 
-		deviceContext5->SetTransform(D2D1::Matrix3x2F::Identity());
+		//deviceContext5->SetTransform(D2D1::Matrix3x2F::Identity());
 	}
 
 	VerifyHR(g_renderTarget->EndDraw());	
@@ -790,9 +791,7 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 			return;
 		}
 
-		D2D1_MATRIX_3X2_F transform;
-		transform = D2D1::Matrix3x2F::Translation(D2D1::SizeF(-g_svgViewBox.x, g_svgViewBox.y));
-		deviceContext5->SetTransform(transform);
+		// Draw the whole SVG to the DC render target. Might as well clip to the view box.
 
 		D2D1_RECT_F clipRect = D2D1::RectF(g_svgViewBox.x, g_svgViewBox.y, g_svgViewBox.width, g_svgViewBox.height);
 		deviceContext5->PushAxisAlignedClip(clipRect, D2D1_ANTIALIAS_MODE_ALIASED);
@@ -801,12 +800,11 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 
 		deviceContext5->PopAxisAlignedClip();
 
-		deviceContext5->SetTransform(D2D1::Matrix3x2F::Identity());
-
 		g_renderTarget->EndDraw();
 
+		// Copy from the view box on the DC render target, to an intermediate.
 		D2D1_POINT_2U destPoint = D2D1::Point2U(0, 0);
-		D2D1_RECT_U sourceRect = D2D1::RectU(g_svgViewBox.x, g_svgViewBox.y, g_svgViewBox.width, g_svgViewBox.height);
+		D2D1_RECT_U sourceRect = D2D1::RectU(g_svgViewBox.x, g_svgViewBox.y, g_svgViewBox.x + g_svgViewBox.width, g_svgViewBox.y + g_svgViewBox.height);
 		if (FAILED(lockable->CopyFromRenderTarget(&destPoint, g_renderTarget.Get(), &sourceRect)))
 		{
 			return;
