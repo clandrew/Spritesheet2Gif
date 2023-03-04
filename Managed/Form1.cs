@@ -148,12 +148,12 @@ namespace Spritesheet2Gif
         {
             if (e.KeyCode == Keys.Left)
             {
-                Native.PreviousSprite();
+                Native.PreviousSprite(this.Handle);
                 Native.Paint();
             }
             else if (e.KeyCode == Keys.Right)
             {
-                Native.NextSprite();
+                Native.NextSprite(this.Handle);
                 Native.Paint();
             }
         }
@@ -171,14 +171,14 @@ namespace Spritesheet2Gif
         private void PreviousBtn_Click(object sender, EventArgs e)
         {
             ForceStopAutoplay();
-            Native.PreviousSprite();
+            Native.PreviousSprite(this.Handle);
             Native.Paint();
         }
 
         private void NextBtn_Click(object sender, EventArgs e)
         {
             ForceStopAutoplay();
-            Native.NextSprite();
+            Native.NextSprite(this.Handle);
             Native.Paint();
         }
 
@@ -263,10 +263,10 @@ class Native
     public static extern void SetSpriteHeight(int h);
 
     [DllImport("Native.dll")]
-    public static extern void PreviousSprite();
+    public static extern void PreviousSprite(IntPtr parentDialog);
 
     [DllImport("Native.dll")]
-    public static extern void NextSprite();
+    public static extern void NextSprite(IntPtr parentDialog);
 
     [DllImport("Native.dll")]
     public static extern void SetAutoplay(IntPtr parentDialog, int value, int gifSpeed);

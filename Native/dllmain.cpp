@@ -72,6 +72,7 @@ struct WindowTitleHelper
 	std::wstring m_programName;
 	std::wstring m_currentFile;
 	std::wstring m_zoomFactor;
+	std::wstring m_frameIndex;
 
 	void UpdateWindowTitle(HWND dialogParent)
 	{
@@ -83,22 +84,41 @@ struct WindowTitleHelper
 			strstrm << L" - " << m_currentFile.c_str();
 		}
 
+		strstrm << L" - Frame " << m_frameIndex.c_str();
+
 		strstrm << L" - " << m_zoomFactor.c_str();
 
 		SetWindowText(dialogParent, strstrm.str().c_str());
 	}
 
+	void SetFrameNumberImpl(int frameNumber)
+	{
+		std::wstringstream strm;
+		strm << frameNumber;
+		m_frameIndex = strm.str();
+	}
+
 public:
-	void Initialize(HWND dialogParent, wchar_t const* zoomFactorString)
+	void Initialize(HWND dialogParent, wchar_t const* zoomFactorString, int frameNumber)
 	{
 		m_programName = L"Spritesheet2Gif";
 		m_zoomFactor = zoomFactorString;
+		SetFrameNumberImpl(frameNumber);
 	}
 
 	void SetZoomFactor(HWND dialogParent, wchar_t const* zoomFactorString)
 	{
 		m_zoomFactor = zoomFactorString;
 		UpdateWindowTitle(dialogParent);
+	}
+
+	void SetFrameNumber(HWND dialogParent, int frameNumber)
+	{
+		if (dialogParent)
+		{
+			SetFrameNumberImpl(frameNumber);
+			UpdateWindowTitle(dialogParent);
+		}
 	}
 
 	void SetOpenFileName(HWND dialogParent, std::wstring fullPath)
@@ -168,7 +188,7 @@ extern "C" __declspec(dllexport) bool _stdcall Initialize(int clientWidth, int c
 	g_autoplay = false;
 	g_zoomIndex = g_defaultZoomIndex;
 
-	g_windowTitleHelper.Initialize(parentDialog, g_zoomPercentStrings[g_zoomIndex]);
+	g_windowTitleHelper.Initialize(parentDialog, g_zoomPercentStrings[g_zoomIndex], g_spriteIndex);
 	
 	return true;
 }
@@ -445,7 +465,7 @@ extern "C" __declspec(dllexport) void _stdcall OpenSpritesheetFile(HWND dialogPa
 #if _DEBUG
 extern "C" __declspec(dllexport) void _stdcall AutoOpenSpritesheetFile(HWND dialogParent)
 {
-	std::wstring testFilename = L"D:\\repos\\Spritesheet2Gif\\Debug\\bunny.svg";
+	std::wstring testFilename = L"C:\\Users\\Claire\\Documents\\nphl\\spritetest2.png";
 
 	OpenSpritesheetFileImpl(dialogParent, testFilename);
 }
@@ -549,7 +569,7 @@ extern "C" __declspec(dllexport) void _stdcall SetSpriteHeight(int h)
 	UpdateSpritesheetRects();
 }
 
-extern "C" __declspec(dllexport) void _stdcall PreviousSprite()
+extern "C" __declspec(dllexport) void _stdcall PreviousSprite(HWND parentDialog)
 {
 	if (g_spriteIndex > 0)
 	{
@@ -559,9 +579,10 @@ extern "C" __declspec(dllexport) void _stdcall PreviousSprite()
 	{
 		g_spriteIndex = static_cast<int>(g_spritesheetRects.size()) - 1;
 	}
+	g_windowTitleHelper.SetFrameNumber(parentDialog, g_spriteIndex);
 }
 
-extern "C" __declspec(dllexport) void _stdcall NextSprite()
+extern "C" __declspec(dllexport) void _stdcall NextSprite(HWND parentDialog)
 {
     assert(g_spritesheetRects.size() <= INT_MAX);
 	if (g_spriteIndex < static_cast<int>(g_spritesheetRects.size()) - 1)
@@ -572,6 +593,7 @@ extern "C" __declspec(dllexport) void _stdcall NextSprite()
 	{
 		g_spriteIndex = 0;
 	}
+	g_windowTitleHelper.SetFrameNumber(parentDialog, g_spriteIndex);
 }
 
 void EnsureTimerStopped()
@@ -591,7 +613,7 @@ void CALLBACK TimerProc(
 {
 	if (g_autoplay)
 	{
-		NextSprite();
+		NextSprite(nullptr);
 		Paint();
 	}
 }
