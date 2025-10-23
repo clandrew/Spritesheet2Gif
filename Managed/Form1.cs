@@ -31,7 +31,7 @@ namespace Spritesheet2Gif
             resetZoomToolStripMenuItem.Enabled = false;
             refreshToolStripMenuItem.Enabled = false;
 
-            //dbgAutoOpen = true;
+            dbgAutoOpen = true;
 
 #if DEBUG
             if (dbgAutoOpen)
@@ -43,33 +43,19 @@ namespace Spritesheet2Gif
         }
         private void AfterOpen_EnableUI()
         {
-            int w = Native.GetSpritesheetWidth();
+            int w = Native.GetTargetWidth();
             if (w == 0)
                 return;
 
-            int h = Native.GetSpritesheetHeight();
+            int h = Native.GetTargetHeight();
             if (h == 0)
                 return;
 
-            spriteWidth.Minimum = 1;
-            spriteWidth.Maximum = w;
-            spriteWidth.Value = w;
-            spriteWidth.Enabled = true;
+            spriteWidth.Text = "64";
+            spriteWidth.Enabled = false;
 
-            spriteHeight.Minimum = 1;
-            spriteHeight.Maximum = h;
-            spriteHeight.Value = h;
-            spriteHeight.Enabled = true;
-
-            gifWidth.Minimum = 1;
-            gifWidth.Maximum = 999999;
-            gifWidth.Value = w;
-            gifWidth.Enabled = true;
-
-            gifHeight.Minimum = 1;
-            gifHeight.Maximum = 999999;
-            gifHeight.Value = h;
-            gifHeight.Enabled = true;
+            spriteHeight.Text = "64";
+            spriteHeight.Enabled = false;
 
             previousBtn.Enabled = true;
             nextBtn.Enabled = true;
@@ -132,28 +118,16 @@ namespace Spritesheet2Gif
             Native.OnResize(canvas.Width, canvas.Height, canvasHdc);
         }
 
-        private void SpriteWidth_ValueChanged(object sender, EventArgs e)
-        {
-            Native.SetSpriteWidth((int)spriteWidth.Value);
-            Native.Paint();
-        }
-
-        private void SpriteHeight_ValueChanged(object sender, EventArgs e)
-        {
-            Native.SetSpriteHeight((int)spriteHeight.Value);
-            Native.Paint();
-        }
-
         private void Form1_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Left)
             {
-                Native.PreviousSprite(this.Handle);
+                Native.PreviousFrame(this.Handle);
                 Native.Paint();
             }
             else if (e.KeyCode == Keys.Right)
             {
-                Native.NextSprite(this.Handle);
+                Native.NextFrame(this.Handle);
                 Native.Paint();
             }
         }
@@ -171,14 +145,14 @@ namespace Spritesheet2Gif
         private void PreviousBtn_Click(object sender, EventArgs e)
         {
             ForceStopAutoplay();
-            Native.PreviousSprite(this.Handle);
+            Native.PreviousFrame(this.Handle);
             Native.Paint();
         }
 
         private void NextBtn_Click(object sender, EventArgs e)
         {
             ForceStopAutoplay();
-            Native.NextSprite(this.Handle);
+            Native.NextFrame(this.Handle);
             Native.Paint();
         }
 
@@ -208,9 +182,12 @@ namespace Spritesheet2Gif
             if (loopNTimes.Checked)
             {
                 loopCountLowLevel = (int)loopCount.Value;
-            }                       
+            }
 
-            Native.SaveGif(this.Handle, (int)gifSpeed.Value, loopCountLowLevel, (int)gifWidth.Value, (int)gifHeight.Value);
+            int width = 64;
+            int height = 64;
+
+            Native.SaveGif(this.Handle, (int)gifSpeed.Value, loopCountLowLevel, width, height);
         }
 
         private void ZoomInToolStripMenuItem_Click(object sender, EventArgs e)
@@ -254,19 +231,15 @@ class Native
     [DllImport("Native.dll")]
     public static extern void AutoOpenSpritesheetFile(IntPtr parentDialog);
     [DllImport("Native.dll")]
-    public static extern int GetSpritesheetWidth();
+    public static extern int GetTargetWidth();
     [DllImport("Native.dll")]
-    public static extern int GetSpritesheetHeight();
-    [DllImport("Native.dll")]
-    public static extern void SetSpriteWidth(int w);
-    [DllImport("Native.dll")]
-    public static extern void SetSpriteHeight(int h);
+    public static extern int GetTargetHeight();
 
     [DllImport("Native.dll")]
-    public static extern void PreviousSprite(IntPtr parentDialog);
+    public static extern void PreviousFrame(IntPtr parentDialog);
 
     [DllImport("Native.dll")]
-    public static extern void NextSprite(IntPtr parentDialog);
+    public static extern void NextFrame(IntPtr parentDialog);
 
     [DllImport("Native.dll")]
     public static extern void SetAutoplay(IntPtr parentDialog, int value, int gifSpeed);

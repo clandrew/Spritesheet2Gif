@@ -55,17 +55,10 @@ struct GlobalAllocation
 ComPtr<IWICImagingFactory> g_wicImagingFactory;
 ComPtr<ID2D1Factory7> g_d2dFactory;
 ComPtr<ID2D1DCRenderTarget> g_renderTarget;
-ComPtr<ID2D1Bitmap> g_d2dSpritesheetBitmap;
-
-GlobalAllocation g_svgDocumentAlloc;
-ComPtr<ID2D1SvgDocument> g_svgDocument;
-D2D1_SVG_VIEWBOX g_svgViewBox{};
-
-std::vector<D2D1_RECT_F> g_spritesheetRects;
-std::wstring g_spritesheetFilePath;
-int g_spriteIndex;
-int g_spriteWidth;
-int g_spriteHeight;
+std::wstring g_sourceFilePath;
+int g_frameIndex;
+bool g_loaded = false;
+std::vector<ComPtr<ID2D1Bitmap>> g_colorizedFrames;
 
 struct WindowTitleHelper
 {
@@ -123,12 +116,12 @@ public:
 
 	void SetOpenFileName(HWND dialogParent, std::wstring fullPath)
 	{
-		size_t delimiterIndex = g_spritesheetFilePath.rfind(L'\\');
-		assert(delimiterIndex < g_spritesheetFilePath.size());
-		if (delimiterIndex >= g_spritesheetFilePath.size())
+		size_t delimiterIndex = g_sourceFilePath.rfind(L'\\');
+		assert(delimiterIndex < g_sourceFilePath.size());
+		if (delimiterIndex >= g_sourceFilePath.size())
 			return;
 
-		m_currentFile = g_spritesheetFilePath.substr(delimiterIndex + 1);
+		m_currentFile = g_sourceFilePath.substr(delimiterIndex + 1);
 		UpdateWindowTitle(dialogParent);
 	}
 };
@@ -141,10 +134,25 @@ static const wchar_t* g_zoomPercentStrings[] = {L"6.75f%", L"12.5f%", L"25%", L"
 static const int g_defaultZoomIndex = 4;
 int g_zoomIndex;
 
+struct PaletteEntry
+{
+	unsigned int R8G8B8;
+};
+
+struct Palette
+{
+	std::vector<PaletteEntry> PaletteEntries;
+};
+
 struct SpritesheetBitmapData
 {
-	std::vector<UINT> DestBuffer;
-	D2D1_SIZE_U Size;
+	std::vector<UINT> SourceBuffer;
+	D2D1_SIZE_U SourceSize;
+
+	D2D1_SIZE_U TargetSize;
+
+	Palette Reference;
+	std::vector<Palette> Palettes;
 };
 SpritesheetBitmapData g_spritesheetBitmapData;
 
@@ -184,11 +192,11 @@ extern "C" __declspec(dllexport) bool _stdcall Initialize(int clientWidth, int c
 	dcRect.bottom = clientHeight;
 	g_renderTarget->BindDC(hdc, &dcRect);
 
-	g_spriteIndex = 0;
+	g_frameIndex = 0;
 	g_autoplay = false;
 	g_zoomIndex = g_defaultZoomIndex;
 
-	g_windowTitleHelper.Initialize(parentDialog, g_zoomPercentStrings[g_zoomIndex], g_spriteIndex);
+	g_windowTitleHelper.Initialize(parentDialog, g_zoomPercentStrings[g_zoomIndex], g_frameIndex);
 	
 	return true;
 }
@@ -199,48 +207,6 @@ extern "C" __declspec(dllexport) void _stdcall OnResize(int clientWidth, int cli
 	dcRect.right = clientWidth;
 	dcRect.bottom = clientHeight;
 	g_renderTarget->BindDC(hdc, &dcRect);
-}
-
-void UpdateSpritesheetRects()
-{
-	D2D1_SIZE_F spritesheetSize{};
-	float left = 0;
-	float top = 0;
-
-	if (g_d2dSpritesheetBitmap)
-	{
-		spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
-	}
-	else if (g_svgDocument)
-	{
-		spritesheetSize = D2D1::SizeF(g_svgViewBox.width, g_svgViewBox.height);
-		left = g_svgViewBox.x;
-		top = g_svgViewBox.y;
-	}
-	else
-	{
-		return;
-	}
-
-	g_spritesheetRects.clear();
-
-	for (float y = top; y < spritesheetSize.height; y += (float)g_spriteHeight)
-	{
-		for (float x = 0; x < spritesheetSize.width; x += static_cast<float>(g_spriteWidth))
-		{
-			D2D1_RECT_F rect;
-
-			rect.left = x;
-			rect.right = rect.left + static_cast<float>(g_spriteWidth);
-			rect.right = min(rect.right, spritesheetSize.width);
-
-			rect.top = y;
-			rect.bottom = rect.top + static_cast<float>(g_spriteHeight);
-			rect.bottom = min(rect.bottom, spritesheetSize.height);
-
-			g_spritesheetRects.push_back(rect);
-		}
-	}
 }
 
 void EnsureWicImagingFactory()
@@ -259,76 +225,11 @@ void EnsureWicImagingFactory()
 	}
 }
 
-void TryLoadAsSvg(std::wstring svgFilePath)
-{
-	FILE* file{};
-	if (_wfopen_s(&file, svgFilePath.c_str(), L"rb") != 0)
-	{
-		return;
-	}
-
-	if (fseek(file, 0, SEEK_END) != 0)
-	{
-		return;
-	}
-
-	long fileLength = ftell(file);
-
-	if (fileLength == 0)
-	{
-		return;
-	}
-
-	g_svgDocumentAlloc.Initialize(fileLength);
-
-	if (fseek(file, 0, SEEK_SET) != 0)
-	{
-		return;
-	}
-
-	if (fread(g_svgDocumentAlloc.m_locked, 1, fileLength, file) != fileLength)
-	{
-		return;
-	}
-
-	if (fclose(file) != 0)
-	{
-		return;
-	}
-
-	if (FAILED(CreateStreamOnHGlobal(g_svgDocumentAlloc.m_handle, TRUE, &g_svgDocumentAlloc.m_stream)))
-	{
-		return;
-	}
-
-	ComPtr<ID2D1DeviceContext5> deviceContext5;
-	if (FAILED(g_renderTarget.As(&deviceContext5)))
-	{
-		return;
-	}
-
-	if (FAILED(deviceContext5->CreateSvgDocument(
-		g_svgDocumentAlloc.m_stream.Get(),
-		D2D1::SizeF(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()),
-		&g_svgDocument)))
-	{
-		return;
-	}
-
-	ComPtr<ID2D1SvgElement> rootNode;
-	g_svgDocument->GetRoot(&rootNode);
-
-	if (FAILED(rootNode->GetAttributeValue(L"viewBox", D2D1_SVG_ATTRIBUTE_POD_TYPE_VIEWBOX, &g_svgViewBox, sizeof(g_svgViewBox))))
-	{
-		return;
-	}
-}
-
 bool TryLoadAsRaster(std::wstring fileName)
 {
 	ComPtr<IWICBitmapDecoder> spDecoder;
 	if (FAILED(g_wicImagingFactory->CreateDecoderFromFilename(
-		g_spritesheetFilePath.c_str(),
+		g_sourceFilePath.c_str(),
 		NULL,
 		GENERIC_READ,
 		WICDecodeMetadataCacheOnLoad, &spDecoder)))
@@ -360,31 +261,93 @@ bool TryLoadAsRaster(std::wstring fileName)
 		return false;
 	}
 
-	if (FAILED(spConverter->GetSize(&g_spritesheetBitmapData.Size.width, &g_spritesheetBitmapData.Size.height)))
+	if (FAILED(spConverter->GetSize(&g_spritesheetBitmapData.SourceSize.width, &g_spritesheetBitmapData.SourceSize.height)))
 	{
 		return false;
 	}
 
-	g_spritesheetBitmapData.DestBuffer.resize(g_spritesheetBitmapData.Size.width * g_spritesheetBitmapData.Size.height);
+	// Copy pixels into a vector
+	g_spritesheetBitmapData.SourceBuffer.resize(g_spritesheetBitmapData.SourceSize.width * g_spritesheetBitmapData.SourceSize.height);
 	if (FAILED(spConverter->CopyPixels(
 		NULL,
-		g_spritesheetBitmapData.Size.width * sizeof(UINT),
-		static_cast<UINT>(g_spritesheetBitmapData.DestBuffer.size()) * sizeof(UINT),
-		(BYTE*)&g_spritesheetBitmapData.DestBuffer[0])))
+		g_spritesheetBitmapData.SourceSize.width * sizeof(UINT),
+		static_cast<UINT>(g_spritesheetBitmapData.SourceBuffer.size()) * sizeof(UINT),
+		(BYTE*)&g_spritesheetBitmapData.SourceBuffer[0])))
 	{
 		return false;
 	}
 
-	D2D1_BITMAP_PROPERTIES bitmapProperties = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
-	if (FAILED(g_renderTarget->CreateBitmap(
-		g_spritesheetBitmapData.Size,
-		&g_spritesheetBitmapData.DestBuffer[0],
-		g_spritesheetBitmapData.Size.width * sizeof(UINT),
-		bitmapProperties,
-		&g_d2dSpritesheetBitmap)))
+	// Copy the reference
+	g_spritesheetBitmapData.Reference.PaletteEntries.resize(8);
+	for (int colorIndex = 0; colorIndex < 8; ++colorIndex)
 	{
-		return false;
+		int sourceX = colorIndex;
+		g_spritesheetBitmapData.Reference.PaletteEntries[colorIndex].R8G8B8 = g_spritesheetBitmapData.SourceBuffer[sourceX];
 	}
+
+	// Copy the palettes
+	g_spritesheetBitmapData.Palettes.resize(7);
+	for (int frameIndex = 0; frameIndex < 7; ++frameIndex)
+	{
+		// For each palette
+		g_spritesheetBitmapData.Palettes[frameIndex].PaletteEntries.resize(8);
+		for (int colorIndex = 0; colorIndex < 8; ++colorIndex)
+		{
+			// For each color
+			int sourceX = (frameIndex + 1) * 8 + colorIndex;
+			g_spritesheetBitmapData.Palettes[frameIndex].PaletteEntries[colorIndex].R8G8B8 = g_spritesheetBitmapData.SourceBuffer[sourceX];
+		}
+	}
+
+	g_colorizedFrames.resize(8);
+
+	std::vector<UINT> colorizedBuffer;
+	colorizedBuffer.resize(64 * 64);
+
+	for (int frameIndex = 0; frameIndex < 7; ++frameIndex)
+	{
+		for (int y = 0; y < 64; ++y)
+		{
+			for (int x = 0; x < 64; ++x)
+			{
+				int sourceIndex = (y + 1) * 64 + x;
+				UINT sourceColor = g_spritesheetBitmapData.SourceBuffer[sourceIndex];
+
+				// What color index is it? Use the reference
+				UINT sourceColorIndex = -1;
+				for (int colorIndex = 0; colorIndex < 8; ++colorIndex)
+				{
+					if (sourceColor == g_spritesheetBitmapData.Reference.PaletteEntries[colorIndex].R8G8B8)
+					{
+						sourceColorIndex = colorIndex;
+					}
+				}							
+
+				int destIndex = y * 64 + x;
+				UINT destColor = 0xFFFF00FF; // Debug magenta
+				if (sourceColorIndex != -1)
+				{
+					destColor = g_spritesheetBitmapData.Palettes[frameIndex].PaletteEntries[sourceColorIndex].R8G8B8;
+				}
+				colorizedBuffer[destIndex] = destColor;
+			}
+		}
+
+		D2D1_SIZE_U frameSize = D2D1::SizeU(64, 64);
+
+		D2D1_BITMAP_PROPERTIES bitmapProperties = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
+		if (FAILED(g_renderTarget->CreateBitmap(
+			frameSize,
+			colorizedBuffer.data(),
+			g_spritesheetBitmapData.SourceSize.width * sizeof(UINT),
+			bitmapProperties,
+			&g_colorizedFrames[frameIndex])))
+		{
+			return false;
+		}
+	}
+
+	g_loaded = true;
 
 	return true;
 }
@@ -393,9 +356,9 @@ void LoadSpritesheetFileImpl()
 {
 	EnsureWicImagingFactory();
 
-	if (!TryLoadAsRaster(g_spritesheetFilePath.c_str()))
+	if (!TryLoadAsRaster(g_sourceFilePath.c_str()))
 	{
-		TryLoadAsSvg(g_spritesheetFilePath.c_str());
+		assert(false);
 	}
 
 	return;
@@ -404,24 +367,11 @@ void LoadSpritesheetFileImpl()
 
 void OpenSpritesheetFileImpl(HWND dialogParent, std::wstring fileName)
 {
-	g_spritesheetFilePath = fileName;
+	g_sourceFilePath = fileName;
 
 	LoadSpritesheetFileImpl();
 
-	if (g_d2dSpritesheetBitmap)
-	{
-		g_spriteWidth = g_spritesheetBitmapData.Size.width;
-		g_spriteHeight = g_spritesheetBitmapData.Size.height;
-	}
-	else if (g_svgDocument)
-	{
-		g_spriteWidth = g_svgViewBox.width;
-		g_spriteHeight = g_svgViewBox.height;
-	}
-
-	UpdateSpritesheetRects();
-
-	g_windowTitleHelper.SetOpenFileName(dialogParent, g_spritesheetFilePath);
+	g_windowTitleHelper.SetOpenFileName(dialogParent, g_sourceFilePath);
 
 }
 
@@ -465,7 +415,7 @@ extern "C" __declspec(dllexport) void _stdcall OpenSpritesheetFile(HWND dialogPa
 #if _DEBUG
 extern "C" __declspec(dllexport) void _stdcall AutoOpenSpritesheetFile(HWND dialogParent)
 {
-	std::wstring testFilename = L"C:\\Users\\Claire\\Documents\\nphl\\spritetest2.png";
+	std::wstring testFilename = L"C:\\Users\\cmlan\\OneDrive\\Pictures\\rotation.png";
 
 	OpenSpritesheetFileImpl(dialogParent, testFilename);
 }
@@ -473,127 +423,63 @@ extern "C" __declspec(dllexport) void _stdcall AutoOpenSpritesheetFile(HWND dial
 
 extern "C" __declspec(dllexport) void _stdcall Paint()
 {
-	if (g_spritesheetRects.size() == 0)
-		return;
-
 	g_renderTarget->BeginDraw();
 	g_renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
 
-	D2D1_RECT_F sourceRect = g_spritesheetRects[g_spriteIndex];
-
 	float zoomFactor = g_zoomPercents[g_zoomIndex] / 100.0f;
 
-	if (g_d2dSpritesheetBitmap)
+	if (g_loaded)
 	{
 		D2D1_MATRIX_3X2_F transform = D2D1::Matrix3x2F::Scale(zoomFactor, zoomFactor);
 		g_renderTarget->SetTransform(transform);
 
-		D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
-		
-		D2D1_RECT_F destRect = D2D1::RectF(0, 0, static_cast<float>(g_spriteWidth), static_cast<float>(g_spriteHeight));
+		D2D1_RECT_F sourceRect = D2D1::RectF(0, 0, static_cast<float>(64), static_cast<float>(64));
+		D2D1_RECT_F destRect = D2D1::RectF(0, 0, static_cast<float>(64), static_cast<float>(64));
 		g_renderTarget->DrawBitmap(
-			g_d2dSpritesheetBitmap.Get(), 
+			g_colorizedFrames[g_frameIndex].Get(),
 			destRect, 
 			1.0f, 
 			D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR, 
 			sourceRect);
 	}
-	else if (g_svgDocument)
-	{
-		ComPtr<ID2D1DeviceContext5> deviceContext5;
-		if (FAILED(g_renderTarget.As(&deviceContext5)))
-		{
-			return;
-		}
-
-		D2D1_MATRIX_3X2_F transform;
-		transform = D2D1::Matrix3x2F::Translation(D2D1::SizeF(-sourceRect.left, -sourceRect.top)) * D2D1::Matrix3x2F::Scale(zoomFactor, zoomFactor);	
-		deviceContext5->SetTransform(transform);
-
-		D2D1_RECT_F clipRect = sourceRect;
-		deviceContext5->PushAxisAlignedClip(clipRect, D2D1_ANTIALIAS_MODE_ALIASED);
-
-		deviceContext5->DrawSvgDocument(g_svgDocument.Get());
-
-		deviceContext5->PopAxisAlignedClip();
-
-		deviceContext5->SetTransform(D2D1::Matrix3x2F::Identity());
-	}
 
 	VerifyHR(g_renderTarget->EndDraw());	
 }
 
-extern "C" __declspec(dllexport) int _stdcall GetSpritesheetWidth()
+extern "C" __declspec(dllexport) int _stdcall GetTargetWidth()
 {
-	if (g_d2dSpritesheetBitmap)
+	return 64;
+}
+
+extern "C" __declspec(dllexport) int _stdcall GetTargetHeight()
+{
+	return 64;
+}
+
+extern "C" __declspec(dllexport) void _stdcall PreviousFrame(HWND parentDialog)
+{
+	if (g_frameIndex > 0)
 	{
-		D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
-		return static_cast<int>(spritesheetSize.width);
-	}
-	else if (g_svgDocument)
-	{
-		return static_cast<int>(g_svgViewBox.width);
+		g_frameIndex--;
 	}
 	else
 	{
-		return 0;
+		g_frameIndex = 6;
 	}
+	g_windowTitleHelper.SetFrameNumber(parentDialog, g_frameIndex);
 }
 
-extern "C" __declspec(dllexport) int _stdcall GetSpritesheetHeight()
+extern "C" __declspec(dllexport) void _stdcall NextFrame(HWND parentDialog)
 {
-	if (g_d2dSpritesheetBitmap)
+	if (g_frameIndex < 6)
 	{
-		D2D1_SIZE_F spritesheetSize = g_d2dSpritesheetBitmap->GetSize();
-		return static_cast<int>(spritesheetSize.height);
-	}
-	else if (g_svgDocument)
-	{
-		return static_cast<int>(g_svgViewBox.height);
+		++g_frameIndex;
 	}
 	else
 	{
-		return 0;
+		g_frameIndex = 0;
 	}
-}
-
-extern "C" __declspec(dllexport) void _stdcall SetSpriteWidth(int w)
-{
-	g_spriteWidth = w;
-	UpdateSpritesheetRects();
-}
-
-extern "C" __declspec(dllexport) void _stdcall SetSpriteHeight(int h)
-{
-	g_spriteHeight = h;
-	UpdateSpritesheetRects();
-}
-
-extern "C" __declspec(dllexport) void _stdcall PreviousSprite(HWND parentDialog)
-{
-	if (g_spriteIndex > 0)
-	{
-		g_spriteIndex--;
-	}
-	else
-	{
-		g_spriteIndex = static_cast<int>(g_spritesheetRects.size()) - 1;
-	}
-	g_windowTitleHelper.SetFrameNumber(parentDialog, g_spriteIndex);
-}
-
-extern "C" __declspec(dllexport) void _stdcall NextSprite(HWND parentDialog)
-{
-    assert(g_spritesheetRects.size() <= INT_MAX);
-	if (g_spriteIndex < static_cast<int>(g_spritesheetRects.size()) - 1)
-	{
-		++g_spriteIndex;
-	}
-	else
-	{
-		g_spriteIndex = 0;
-	}
-	g_windowTitleHelper.SetFrameNumber(parentDialog, g_spriteIndex);
+	g_windowTitleHelper.SetFrameNumber(parentDialog, g_frameIndex);
 }
 
 void EnsureTimerStopped()
@@ -613,7 +499,7 @@ void CALLBACK TimerProc(
 {
 	if (g_autoplay)
 	{
-		NextSprite(nullptr);
+		NextFrame(nullptr);
 		Paint();
 	}
 }
@@ -778,6 +664,7 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 	D2D1_BITMAP_PROPERTIES bitmapProperties = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
 
 	// Create a wic bitmap depicting the loaded spritesheet
+	/*
 	if (g_d2dSpritesheetBitmap)
 	{
 		if (FAILED(singleSpriteWicBitmapRenderTarget->CreateBitmap(
@@ -789,79 +676,6 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 		{
 			return;
 		}
-	}
-	if (g_svgDocument)
-	{
-		float spritesheetWidth = g_svgViewBox.width;
-		float spritesheetHeight = g_svgViewBox.height;
-
-		ComPtr<ID2D1DeviceContext> deviceContext6;
-		g_renderTarget.As(&deviceContext6);
-
-		D2D1_BITMAP_PROPERTIES1 lockableProperties = D2D1::BitmapProperties1(
-			D2D1_BITMAP_OPTIONS_CPU_READ | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
-			D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
-		ComPtr<ID2D1Bitmap1> lockable;
-		if (FAILED(deviceContext6->CreateBitmap(D2D1::SizeU(spritesheetWidth, spritesheetHeight), nullptr, 0, lockableProperties, &lockable)))
-		{
-			return;
-		}
-		g_renderTarget->BeginDraw();
-		g_renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
-
-		ComPtr<ID2D1DeviceContext5> deviceContext5;
-		if (FAILED(g_renderTarget.As(&deviceContext5)))
-		{
-			return;
-		}
-
-		D2D1_MATRIX_3X2_F transform;
-		transform = D2D1::Matrix3x2F::Translation(D2D1::SizeF(-g_svgViewBox.x, g_svgViewBox.y));
-		deviceContext5->SetTransform(transform);
-
-		D2D1_RECT_F clipRect = D2D1::RectF(g_svgViewBox.x, g_svgViewBox.y, g_svgViewBox.width, g_svgViewBox.height);
-		deviceContext5->PushAxisAlignedClip(clipRect, D2D1_ANTIALIAS_MODE_ALIASED);
-
-		deviceContext5->DrawSvgDocument(g_svgDocument.Get());
-
-		deviceContext5->PopAxisAlignedClip();
-
-		deviceContext5->SetTransform(D2D1::Matrix3x2F::Identity());
-
-		g_renderTarget->EndDraw();
-
-		D2D1_POINT_2U destPoint = D2D1::Point2U(0, 0);
-		D2D1_RECT_U sourceRect = D2D1::RectU(g_svgViewBox.x, g_svgViewBox.y, g_svgViewBox.width, g_svgViewBox.height);
-		if (FAILED(lockable->CopyFromRenderTarget(&destPoint, g_renderTarget.Get(), &sourceRect)))
-		{
-			return;
-		}
-
-		D2D1_MAPPED_RECT mappedRect{};
-		if (FAILED(lockable->Map(D2D1_MAP_OPTIONS_READ, &mappedRect)))
-		{
-			return;
-		}
-
-		D2D1_SIZE_U spritesheetSizeU = D2D1::SizeU(spritesheetWidth, spritesheetHeight);
-
-		if (FAILED(singleSpriteWicBitmapRenderTarget->CreateBitmap(
-			spritesheetSizeU,
-			mappedRect.bits,
-			mappedRect.pitch,
-			bitmapProperties,
-			&wicCompatibleSpritesheet)))
-		{
-			return;
-		}
-
-		if (FAILED(lockable->Unmap()))
-		{
-			return;
-		}
-
-		Paint();
-		
 	}
 
 
@@ -956,7 +770,7 @@ extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int an
 	if (FAILED(stream->Commit(STGC_DEFAULT)))
 	{
 		return;
-	}
+	}*/
 }
 
 extern "C" __declspec(dllexport) void _stdcall ZoomIn(HWND parentDialog)
@@ -993,11 +807,8 @@ extern "C" __declspec(dllexport) void _stdcall ReloadImage()
 
 extern "C" __declspec(dllexport) void _stdcall Uninitialize()
 {
-	g_svgDocumentAlloc.m_stream.Reset(); // Important- delete the SVG structures before the factory.
-	g_svgDocument.Reset();
-
 	g_d2dFactory.Reset();
 	g_renderTarget.Reset();
-	g_d2dSpritesheetBitmap.Reset();
 	g_wicImagingFactory.Reset();
+	g_colorizedFrames.clear();
 }
