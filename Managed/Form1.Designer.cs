@@ -38,6 +38,8 @@
             this.zoomInToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.zoomOutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resetZoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.snowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.label5 = new System.Windows.Forms.Label();
@@ -60,8 +62,6 @@
             this.label1 = new System.Windows.Forms.Label();
             this.spriteWidth = new System.Windows.Forms.NumericUpDown();
             this.canvas = new System.Windows.Forms.Panel();
-            this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.snowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -164,6 +164,21 @@
             this.resetZoomToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
             this.resetZoomToolStripMenuItem.Text = "Reset Zoom";
             this.resetZoomToolStripMenuItem.Click += new System.EventHandler(this.ResetZoomToolStripMenuItem_Click);
+            // 
+            // toolsToolStripMenuItem
+            // 
+            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.snowToolStripMenuItem});
+            this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
+            this.toolsToolStripMenuItem.Text = "Tools";
+            // 
+            // snowToolStripMenuItem
+            // 
+            this.snowToolStripMenuItem.Name = "snowToolStripMenuItem";
+            this.snowToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.snowToolStripMenuItem.Text = "Add Snow";
+            this.snowToolStripMenuItem.Click += new System.EventHandler(this.snowToolStripMenuItem_Click);
             // 
             // panel1
             // 
@@ -392,21 +407,6 @@
             this.canvas.Size = new System.Drawing.Size(777, 426);
             this.canvas.TabIndex = 2;
             this.canvas.Paint += new System.Windows.Forms.PaintEventHandler(this.Canvas_Paint);
-            // 
-            // toolsToolStripMenuItem
-            // 
-            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.snowToolStripMenuItem});
-            this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
-            this.toolsToolStripMenuItem.Text = "Tools";
-            // 
-            // snowToolStripMenuItem
-            // 
-            this.snowToolStripMenuItem.Name = "snowToolStripMenuItem";
-            this.snowToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.snowToolStripMenuItem.Text = "Snow";
-            this.snowToolStripMenuItem.Click += new System.EventHandler(this.snowToolStripMenuItem_Click);
             // 
             // Form1
             // 
