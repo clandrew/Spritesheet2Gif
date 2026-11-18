@@ -38,8 +38,8 @@ namespace Spritesheet2Gif
                 Native.AutoOpenSpritesheetFile(this.Handle);
                 AfterOpen_EnableUI();
                 this.spriteWidth.Value = 256;
-                Native.AddSnow();
-                Native.Paint();
+                //Native.AddSnow();
+                //Native.Paint();
             }
 #endif
         }
@@ -241,8 +241,24 @@ namespace Spritesheet2Gif
 
         private void snowToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Native.AddSnow();
-            Native.Paint();
+            using (AddSnow dialog = new AddSnow())
+            {
+                DialogResult result = dialog.ShowDialog(this);
+                if (result == DialogResult.Cancel)
+                    return;
+
+                Native.AddSnow(
+                    dialog.GetColorArgb(),
+                    dialog.GetColumnSpacingBase(),
+                    dialog.GetColumnSpacingRandomIncrementLimit(),
+                    dialog.GetColumnInitialYPositionBase(),
+                    dialog.GetColumnInitialYPositionRandomIncrementLimit(),
+                    dialog.GetOneOverXVelocityBase(),
+                    dialog.GetOneOverXVelocityRandomIncrementLimit(),
+                    dialog.GetYVelocity());
+
+                Native.Paint();
+            }
         }
     }
 }
@@ -298,7 +314,15 @@ class Native
     public static extern void ReloadImage();
 
     [DllImport("Native.dll")]
-    public static extern void AddSnow();
+    public static extern void AddSnow(
+        int colorArgb,
+        int columnSpacingBase,
+        int colulmnSpacingRandomIncrementLimit,
+        int columnInitialYPositionBase,
+        int columnInitialYPositionRandomIncrementLimit,
+        int oneOverXVelocityBase,
+        int oneOverXVelocityRandomIncrementLimit,
+        int yVelocity);
 
     [DllImport("Native.dll")]
     public static extern void Uninitialize();

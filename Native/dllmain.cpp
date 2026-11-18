@@ -1023,11 +1023,18 @@ void PlotSnow(int frame, int flakeX, int flakeY, UINT snowColor)
 	g_spritesheetBitmapData.DestBuffer[index] = snowColor;
 }
 
-void AddSnowColumn(int flakeX, int yVelocity, UINT snowColor)
+void AddSnowColumn(
+	int flakeX, 
+	int yVelocity, 
+	UINT snowColor,
+	int columnInitialYPositionBase,
+	int columnInitialYPositionRandomIncrementLimit,
+	int oneOverXVelocityBase,
+	int oneOverXVelocityRandomIncrementLimit)
 {
-	int oneOverXVelocity = 4 + ((rand() % 10));
+	int oneOverXVelocity = oneOverXVelocityBase + ((rand() % oneOverXVelocityRandomIncrementLimit));
 
-	int flakeY = -80 + (rand() % 80);
+	int flakeY = columnInitialYPositionBase + (rand() % columnInitialYPositionRandomIncrementLimit);
 
 	int frame = 0;
 
@@ -1071,22 +1078,36 @@ void AddSnowColumn(int flakeX, int yVelocity, UINT snowColor)
 
 }
 
-extern "C" __declspec(dllexport) void _stdcall AddSnow()
+extern "C" __declspec(dllexport) void _stdcall AddSnow(
+	int colorArgb,
+	int columnSpacingBase,
+	int colulmnSpacingRandomIncrementLimit,
+	int columnInitialYPositionBase,
+	int columnInitialYPositionRandomIncrementLimit,
+	int oneOverXVelocityBase,
+	int oneOverXVelocityRandomIncrementLimit,
+	int yVelocity)
 {
 	// Like, we could do something to retarget the image on the GPU.
 	// But then again we can do all our drawing on the CPU and just recreate the bitmap.
 
 	g_d2dSpritesheetBitmap.Reset();
 
-	UINT snowColor = 0xFFFFFFFF;
-	int yVelocity = 3;
+	UINT snowColor = *(reinterpret_cast<UINT*>(&colorArgb));
 
 	int flakeX = 0;
 	while (flakeX < g_spriteWidth)
 	{
-		AddSnowColumn(flakeX, yVelocity, snowColor);
+		AddSnowColumn(
+			flakeX, 
+			yVelocity, 
+			snowColor, 
+			columnInitialYPositionBase,
+			columnInitialYPositionRandomIncrementLimit,
+			oneOverXVelocityBase,
+			oneOverXVelocityRandomIncrementLimit);
 
-		flakeX += 12 + (rand() % 4);
+		flakeX += columnSpacingBase + (rand() % colulmnSpacingRandomIncrementLimit);
 	}
 
 	D2D1_BITMAP_PROPERTIES bitmapProperties = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
