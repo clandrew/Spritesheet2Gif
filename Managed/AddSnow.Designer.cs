@@ -47,6 +47,10 @@ namespace Spritesheet2Gif
             this.columnInitialYPositionRandomIncrementLimit = new System.Windows.Forms.NumericUpDown();
             this.oneOverXVelocityBase = new System.Windows.Forms.NumericUpDown();
             this.oneOverXVelocityRandomIncrementLimit = new System.Windows.Forms.NumericUpDown();
+            this.label9 = new System.Windows.Forms.Label();
+            this.particleSize = new System.Windows.Forms.NumericUpDown();
+            this.label10 = new System.Windows.Forms.Label();
+            this.initialXPosition = new System.Windows.Forms.NumericUpDown();
             ((System.ComponentModel.ISupportInitialize)(this.yVelocity)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.columnSpacingBase)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.columnSpacingRandomIncrementLimit)).BeginInit();
@@ -54,6 +58,8 @@ namespace Spritesheet2Gif
             ((System.ComponentModel.ISupportInitialize)(this.columnInitialYPositionRandomIncrementLimit)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.oneOverXVelocityBase)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.oneOverXVelocityRandomIncrementLimit)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.particleSize)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.initialXPosition)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -68,7 +74,7 @@ namespace Spritesheet2Gif
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(47, 67);
+            this.label2.Location = new System.Drawing.Point(36, 128);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(114, 13);
             this.label2.TabIndex = 1;
@@ -77,7 +83,7 @@ namespace Spritesheet2Gif
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(47, 97);
+            this.label3.Location = new System.Drawing.Point(36, 158);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(204, 13);
             this.label3.TabIndex = 2;
@@ -86,7 +92,7 @@ namespace Spritesheet2Gif
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(47, 130);
+            this.label4.Location = new System.Drawing.Point(36, 191);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(149, 13);
             this.label4.TabIndex = 3;
@@ -95,7 +101,7 @@ namespace Spritesheet2Gif
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(47, 162);
+            this.label5.Location = new System.Drawing.Point(36, 223);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(239, 13);
             this.label5.TabIndex = 4;
@@ -104,7 +110,7 @@ namespace Spritesheet2Gif
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(47, 194);
+            this.label6.Location = new System.Drawing.Point(36, 255);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(133, 13);
             this.label6.TabIndex = 5;
@@ -113,7 +119,7 @@ namespace Spritesheet2Gif
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(47, 226);
+            this.label7.Location = new System.Drawing.Point(36, 287);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(223, 13);
             this.label7.TabIndex = 6;
@@ -122,7 +128,7 @@ namespace Spritesheet2Gif
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(47, 261);
+            this.label8.Location = new System.Drawing.Point(36, 322);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(57, 13);
             this.label8.TabIndex = 7;
@@ -141,7 +147,7 @@ namespace Spritesheet2Gif
             // button2
             // 
             this.button2.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.button2.Location = new System.Drawing.Point(16, 310);
+            this.button2.Location = new System.Drawing.Point(15, 362);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(115, 30);
             this.button2.TabIndex = 9;
@@ -151,7 +157,7 @@ namespace Spritesheet2Gif
             // button3
             // 
             this.button3.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.button3.Location = new System.Drawing.Point(246, 310);
+            this.button3.Location = new System.Drawing.Point(245, 362);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(115, 30);
             this.button3.TabIndex = 10;
@@ -160,7 +166,7 @@ namespace Spritesheet2Gif
             // 
             // yVelocity
             // 
-            this.yVelocity.Location = new System.Drawing.Point(292, 259);
+            this.yVelocity.Location = new System.Drawing.Point(281, 320);
             this.yVelocity.Maximum = new decimal(new int[] {
             10,
             0,
@@ -182,7 +188,7 @@ namespace Spritesheet2Gif
             // 
             // columnSpacingBase
             // 
-            this.columnSpacingBase.Location = new System.Drawing.Point(292, 65);
+            this.columnSpacingBase.Location = new System.Drawing.Point(281, 126);
             this.columnSpacingBase.Minimum = new decimal(new int[] {
             1,
             0,
@@ -199,7 +205,7 @@ namespace Spritesheet2Gif
             // 
             // columnSpacingRandomIncrementLimit
             // 
-            this.columnSpacingRandomIncrementLimit.Location = new System.Drawing.Point(292, 95);
+            this.columnSpacingRandomIncrementLimit.Location = new System.Drawing.Point(281, 156);
             this.columnSpacingRandomIncrementLimit.Minimum = new decimal(new int[] {
             1,
             0,
@@ -216,7 +222,7 @@ namespace Spritesheet2Gif
             // 
             // columnInitialYPositionBase
             // 
-            this.columnInitialYPositionBase.Location = new System.Drawing.Point(292, 128);
+            this.columnInitialYPositionBase.Location = new System.Drawing.Point(281, 189);
             this.columnInitialYPositionBase.Maximum = new decimal(new int[] {
             200,
             0,
@@ -238,7 +244,7 @@ namespace Spritesheet2Gif
             // 
             // columnInitialYPositionRandomIncrementLimit
             // 
-            this.columnInitialYPositionRandomIncrementLimit.Location = new System.Drawing.Point(292, 160);
+            this.columnInitialYPositionRandomIncrementLimit.Location = new System.Drawing.Point(281, 221);
             this.columnInitialYPositionRandomIncrementLimit.Maximum = new decimal(new int[] {
             200,
             0,
@@ -255,7 +261,7 @@ namespace Spritesheet2Gif
             // 
             // oneOverXVelocityBase
             // 
-            this.oneOverXVelocityBase.Location = new System.Drawing.Point(292, 192);
+            this.oneOverXVelocityBase.Location = new System.Drawing.Point(281, 253);
             this.oneOverXVelocityBase.Maximum = new decimal(new int[] {
             10,
             0,
@@ -277,7 +283,7 @@ namespace Spritesheet2Gif
             // 
             // oneOverXVelocityRandomIncrementLimit
             // 
-            this.oneOverXVelocityRandomIncrementLimit.Location = new System.Drawing.Point(292, 226);
+            this.oneOverXVelocityRandomIncrementLimit.Location = new System.Drawing.Point(281, 287);
             this.oneOverXVelocityRandomIncrementLimit.Maximum = new decimal(new int[] {
             20,
             0,
@@ -292,11 +298,77 @@ namespace Spritesheet2Gif
             0,
             0});
             // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(36, 60);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(68, 13);
+            this.label9.TabIndex = 18;
+            this.label9.Text = "Particle Size:";
+            // 
+            // particleSize
+            // 
+            this.particleSize.Location = new System.Drawing.Point(281, 58);
+            this.particleSize.Maximum = new decimal(new int[] {
+            40,
+            0,
+            0,
+            0});
+            this.particleSize.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.particleSize.Name = "particleSize";
+            this.particleSize.Size = new System.Drawing.Size(69, 20);
+            this.particleSize.TabIndex = 19;
+            this.particleSize.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(36, 95);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(84, 13);
+            this.label10.TabIndex = 20;
+            this.label10.Text = "Initial X Position:";
+            // 
+            // initialXPosition
+            // 
+            this.initialXPosition.Location = new System.Drawing.Point(281, 93);
+            this.initialXPosition.Maximum = new decimal(new int[] {
+            200,
+            0,
+            0,
+            0});
+            this.initialXPosition.Minimum = new decimal(new int[] {
+            200,
+            0,
+            0,
+            -2147483648});
+            this.initialXPosition.Name = "initialXPosition";
+            this.initialXPosition.Size = new System.Drawing.Size(69, 20);
+            this.initialXPosition.TabIndex = 21;
+            this.initialXPosition.Value = new decimal(new int[] {
+            80,
+            0,
+            0,
+            -2147483648});
+            // 
             // AddSnow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(400, 369);
+            this.ClientSize = new System.Drawing.Size(400, 413);
+            this.Controls.Add(this.initialXPosition);
+            this.Controls.Add(this.label10);
+            this.Controls.Add(this.particleSize);
+            this.Controls.Add(this.label9);
             this.Controls.Add(this.oneOverXVelocityRandomIncrementLimit);
             this.Controls.Add(this.oneOverXVelocityBase);
             this.Controls.Add(this.columnInitialYPositionRandomIncrementLimit);
@@ -327,6 +399,8 @@ namespace Spritesheet2Gif
             ((System.ComponentModel.ISupportInitialize)(this.columnInitialYPositionRandomIncrementLimit)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.oneOverXVelocityBase)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.oneOverXVelocityRandomIncrementLimit)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.particleSize)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.initialXPosition)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -352,5 +426,9 @@ namespace Spritesheet2Gif
         private System.Windows.Forms.NumericUpDown columnInitialYPositionRandomIncrementLimit;
         private System.Windows.Forms.NumericUpDown oneOverXVelocityBase;
         private System.Windows.Forms.NumericUpDown oneOverXVelocityRandomIncrementLimit;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.NumericUpDown particleSize;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.NumericUpDown initialXPosition;
     }
 }

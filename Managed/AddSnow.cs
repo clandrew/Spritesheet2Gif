@@ -10,13 +10,23 @@ using System.Windows.Forms;
 
 namespace Spritesheet2Gif
 {
+
     public partial class AddSnow : Form
     {
-        public AddSnow()
+        public AddSnow(Settings s)
         {
             InitializeComponent();
 
-            chooseColor.BackColor = System.Drawing.Color.White;
+            chooseColor.BackColor = s.ColorArgb;
+            particleSize.Value = s.ParticleSize;
+            initialXPosition.Value = s.InitialXPosition;
+            columnSpacingBase.Value = s.ColumnSpacingBase;
+            columnSpacingRandomIncrementLimit.Value = s.ColumnSpacingRandomIncrementLimit;
+            columnInitialYPositionBase.Value = s.ColumnInitialYPositionBase;
+            columnInitialYPositionRandomIncrementLimit.Value = s.ColumnInitialYPositionRandomIncrementLimit;
+            oneOverXVelocityBase.Value = s.OneOverXVelocityBase;
+            oneOverXVelocityRandomIncrementLimit.Value = s.OneOverXVelocityRandomIncrementLimit;
+            yVelocity.Value = s.YVelocity;
         }
 
         private void chooseColor_Click(object sender, EventArgs e)
@@ -34,44 +44,36 @@ namespace Spritesheet2Gif
             }
         }
 
-        public int GetColorArgb()
+        public struct Settings
         {
-            return chooseColor.BackColor.ToArgb();
+            public Color ColorArgb;
+            public decimal ParticleSize;
+            public decimal InitialXPosition;
+            public decimal ColumnSpacingBase;
+            public decimal ColumnSpacingRandomIncrementLimit;
+            public decimal ColumnInitialYPositionBase;
+            public decimal ColumnInitialYPositionRandomIncrementLimit;
+            public decimal OneOverXVelocityBase;
+            public decimal OneOverXVelocityRandomIncrementLimit;
+            public decimal YVelocity;
         }
 
-        public int GetColumnSpacingBase()
+        public Settings GetSettings()
         {
-            return (int)columnSpacingBase.Value;
+            return new Settings() 
+            { 
+                ColorArgb = chooseColor.BackColor,
+                ParticleSize = particleSize.Value,
+                InitialXPosition = initialXPosition.Value,
+                ColumnSpacingBase = columnSpacingBase.Value,
+                ColumnSpacingRandomIncrementLimit = columnSpacingRandomIncrementLimit.Value,
+                ColumnInitialYPositionBase = columnInitialYPositionBase.Value,
+                ColumnInitialYPositionRandomIncrementLimit = columnSpacingRandomIncrementLimit.Value,
+                OneOverXVelocityBase = oneOverXVelocityBase.Value,
+                OneOverXVelocityRandomIncrementLimit = oneOverXVelocityRandomIncrementLimit.Value,
+                YVelocity = yVelocity.Value
+            };
         }
 
-        public int GetColumnSpacingRandomIncrementLimit()
-        {
-            return (int)columnSpacingRandomIncrementLimit.Value;
-        }
-
-        public int GetColumnInitialYPositionBase()
-        {
-            return (int)columnInitialYPositionBase.Value;
-        }
-
-        public int GetColumnInitialYPositionRandomIncrementLimit()
-        {
-            return (int)columnInitialYPositionRandomIncrementLimit.Value;
-        }
-
-        public int GetOneOverXVelocityBase()
-        {
-            return (int)oneOverXVelocityBase.Value;
-        }
-
-        public int GetOneOverXVelocityRandomIncrementLimit()
-        {
-            return (int)oneOverXVelocityRandomIncrementLimit.Value;
-        }
-
-        public int GetYVelocity()
-        {
-            return (int)yVelocity.Value;
-        }
     }
 }

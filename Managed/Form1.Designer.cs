@@ -31,6 +31,7 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveSpritesheetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -91,6 +92,7 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
+            this.saveSpritesheetToolStripMenuItem,
             this.saveToolStripMenuItem,
             this.refreshToolStripMenuItem,
             this.exitToolStripMenuItem});
@@ -102,23 +104,32 @@
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(177, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(200, 22);
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.OpenToolStripMenuItem_Click);
+            // 
+            // saveSpritesheetToolStripMenuItem
+            // 
+            this.saveSpritesheetToolStripMenuItem.Name = "saveSpritesheetToolStripMenuItem";
+            this.saveSpritesheetToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
+            this.saveSpritesheetToolStripMenuItem.Size = new System.Drawing.Size(200, 22);
+            this.saveSpritesheetToolStripMenuItem.Text = "Save Spritesheet";
+            this.saveSpritesheetToolStripMenuItem.Click += new System.EventHandler(this.saveSpritesheetToolStripMenuItem_Click);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(177, 22);
-            this.saveToolStripMenuItem.Text = "Save/Export";
+            this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
+            | System.Windows.Forms.Keys.S)));
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(200, 22);
+            this.saveToolStripMenuItem.Text = "Export GIF";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.SaveToolStripMenuItem_Click);
             // 
             // refreshToolStripMenuItem
             // 
             this.refreshToolStripMenuItem.Name = "refreshToolStripMenuItem";
             this.refreshToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F5;
-            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(177, 22);
+            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(200, 22);
             this.refreshToolStripMenuItem.Text = "Refresh";
             this.refreshToolStripMenuItem.Click += new System.EventHandler(this.RefreshToolStripMenuItem_Click);
             // 
@@ -126,7 +137,7 @@
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             this.exitToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F4)));
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(177, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(200, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
             // 
@@ -176,7 +187,7 @@
             // snowToolStripMenuItem
             // 
             this.snowToolStripMenuItem.Name = "snowToolStripMenuItem";
-            this.snowToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.snowToolStripMenuItem.Size = new System.Drawing.Size(128, 22);
             this.snowToolStripMenuItem.Text = "Add Snow";
             this.snowToolStripMenuItem.Click += new System.EventHandler(this.snowToolStripMenuItem_Click);
             // 
@@ -477,6 +488,7 @@
         private System.Windows.Forms.NumericUpDown gifWidth;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem snowToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveSpritesheetToolStripMenuItem;
     }
 }
 

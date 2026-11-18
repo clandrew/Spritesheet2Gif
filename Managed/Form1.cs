@@ -7,6 +7,7 @@ namespace Spritesheet2Gif
 {
     public partial class Form1 : Form
     {
+        AddSnow.Settings snowSettings;
         Graphics canvasGraphics;
         IntPtr canvasHdc;
         bool autoplay;
@@ -31,13 +32,24 @@ namespace Spritesheet2Gif
             resetZoomToolStripMenuItem.Enabled = false;
             refreshToolStripMenuItem.Enabled = false;
 
+            snowSettings.ColorArgb = Color.White;
+            snowSettings.ParticleSize = 2;
+            snowSettings.InitialXPosition = -80;
+            snowSettings.ColumnSpacingBase = 12;
+            snowSettings.ColumnSpacingRandomIncrementLimit = 4;
+            snowSettings.ColumnInitialYPositionBase = -80;
+            snowSettings.ColumnInitialYPositionRandomIncrementLimit = 80;
+            snowSettings.OneOverXVelocityBase = 4;
+            snowSettings.OneOverXVelocityRandomIncrementLimit = 10;
+            snowSettings.YVelocity = 3;
+
 #if DEBUG
             dbgAutoOpen = true;
             if (dbgAutoOpen)
             {
                 Native.AutoOpenSpritesheetFile(this.Handle);
                 AfterOpen_EnableUI();
-                this.spriteWidth.Value = 256;
+                this.spriteWidth.Value = 1200;
                 //Native.AddSnow();
                 //Native.Paint();
             }
@@ -215,6 +227,11 @@ namespace Spritesheet2Gif
             Native.SaveGif(this.Handle, (int)gifSpeed.Value, loopCountLowLevel, (int)gifWidth.Value, (int)gifHeight.Value);
         }
 
+        private void saveSpritesheetToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Native.SaveSpritesheet(this.Handle);
+        }
+
         private void ZoomInToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Native.ZoomIn(this.Handle);
@@ -241,21 +258,25 @@ namespace Spritesheet2Gif
 
         private void snowToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            using (AddSnow dialog = new AddSnow())
+            using (AddSnow dialog = new AddSnow(snowSettings))
             {
                 DialogResult result = dialog.ShowDialog(this);
                 if (result == DialogResult.Cancel)
                     return;
 
+                snowSettings = dialog.GetSettings();
+
                 Native.AddSnow(
-                    dialog.GetColorArgb(),
-                    dialog.GetColumnSpacingBase(),
-                    dialog.GetColumnSpacingRandomIncrementLimit(),
-                    dialog.GetColumnInitialYPositionBase(),
-                    dialog.GetColumnInitialYPositionRandomIncrementLimit(),
-                    dialog.GetOneOverXVelocityBase(),
-                    dialog.GetOneOverXVelocityRandomIncrementLimit(),
-                    dialog.GetYVelocity());
+                    snowSettings.ColorArgb.ToArgb(),
+                    (int)snowSettings.ParticleSize,
+                    (int)snowSettings.InitialXPosition,
+                    (int)snowSettings.ColumnSpacingBase,
+                    (int)snowSettings.ColumnSpacingRandomIncrementLimit,
+                    (int)snowSettings.ColumnInitialYPositionBase,
+                    (int)snowSettings.ColumnInitialYPositionRandomIncrementLimit,
+                    (int)snowSettings.OneOverXVelocityBase,
+                    (int)snowSettings.OneOverXVelocityRandomIncrementLimit,
+                    (int)snowSettings.YVelocity);
 
                 Native.Paint();
             }
@@ -299,6 +320,9 @@ class Native
     public static extern void SetAutoplaySpeed(IntPtr parentDialog, int gifSpeed);
 
     [DllImport("Native.dll")]
+    public static extern void SaveSpritesheet(IntPtr parentDialog);
+
+    [DllImport("Native.dll")]
     public static extern void SaveGif(IntPtr parentDialog, int animationSpeed, int loopCount, int gifWidth, int gifHeight);
 
     [DllImport("Native.dll")]
@@ -316,6 +340,8 @@ class Native
     [DllImport("Native.dll")]
     public static extern void AddSnow(
         int colorArgb,
+        int particleSize,
+        int initialXPosition,
         int columnSpacingBase,
         int colulmnSpacingRandomIncrementLimit,
         int columnInitialYPositionBase,

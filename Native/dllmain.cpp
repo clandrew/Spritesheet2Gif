@@ -465,7 +465,7 @@ extern "C" __declspec(dllexport) void _stdcall OpenSpritesheetFile(HWND dialogPa
 #if _DEBUG
 extern "C" __declspec(dllexport) void _stdcall AutoOpenSpritesheetFile(HWND dialogParent)
 {
-	std::wstring testFilename = L"C:\\Users\\cmlan\\OneDrive\\Pictures\\DOSEmber2026\\SnowTest.png";
+	std::wstring testFilename = L"C:\\Users\\cmlan\\OneDrive\\Pictures\\DOSEmber2026\\poster_1200_1200_snow2.png";
 
 	OpenSpritesheetFileImpl(dialogParent, testFilename);
 }
@@ -649,6 +649,124 @@ extern "C" __declspec(dllexport) void _stdcall SetAutoplaySpeed(HWND parent, int
 {
 	EnsureTimerStopped();
 	StartTimer(parent, 1, speed);
+}
+
+extern "C" __declspec(dllexport) void _stdcall SaveSpritesheet(HWND parentDialog)
+{
+	TCHAR documentsPath[MAX_PATH];
+
+	VerifyHR(SHGetFolderPath(NULL,
+		CSIDL_PERSONAL | CSIDL_FLAG_CREATE,
+		NULL,
+		0,
+		documentsPath));
+
+	OPENFILENAME ofn;
+	ZeroMemory(&ofn, sizeof(ofn));
+
+	wchar_t szFile[MAX_PATH];
+	wcscpy_s(szFile, L"spritesheet.png");
+
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = parentDialog;
+	ofn.lpstrFile = szFile;
+	ofn.nMaxFile = sizeof(szFile);
+	ofn.lpstrFilter = L"Portable Network Graphics (PNG)\0*.PNG\0All\0*.*\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = documentsPath;
+	ofn.lpstrDefExt = L"txt";
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+
+	if (GetSaveFileName(&ofn) == 0)
+		return;
+
+	EnsureWicImagingFactory();
+
+	std::wstring destFilename = ofn.lpstrFile;
+
+	ComPtr<IWICStream> stream;
+	if (FAILED(g_wicImagingFactory->CreateStream(&stream)))
+	{
+		return;
+	}
+	if (FAILED(stream->InitializeFromFilename(destFilename.c_str(), GENERIC_WRITE)))
+	{
+		return;
+	}
+
+	ComPtr<IWICBitmapEncoder> encoder;
+	if (FAILED(g_wicImagingFactory->CreateEncoder(GUID_ContainerFormatPng, NULL, &encoder)))
+	{
+		return;
+	}
+
+	if (FAILED(encoder->Initialize(stream.Get(), WICBitmapEncoderNoCache)))
+	{
+		return;
+	}
+
+
+	ComPtr<IPropertyBag2> wicPropertyBag;
+	ComPtr<IWICBitmapFrameEncode> frameEncode;
+	if (FAILED(encoder->CreateNewFrame(&frameEncode, &wicPropertyBag)))
+	{
+		return;
+	}
+
+	if (FAILED(frameEncode->Initialize(wicPropertyBag.Get())))
+	{
+		return;
+	}
+
+	if (FAILED(frameEncode->SetSize(g_spritesheetBitmapData.Size.width, g_spritesheetBitmapData.Size.height)))
+	{
+		return;
+	}
+
+	if (FAILED(frameEncode->SetResolution(96, 96)))
+	{
+		return;
+	}
+
+	WICPixelFormatGUID pixelFormat = GUID_WICPixelFormat32bppPBGRA;
+	if (FAILED(frameEncode->SetPixelFormat(&pixelFormat)))
+	{
+		return;
+	}
+
+	ComPtr<IWICBitmap> wicBitmap;
+	g_wicImagingFactory->CreateBitmapFromMemory(
+		g_spritesheetBitmapData.Size.width,
+		g_spritesheetBitmapData.Size.height,
+		GUID_WICPixelFormat32bppPBGRA,
+		g_spritesheetBitmapData.Size.width * sizeof(UINT),
+		g_spritesheetBitmapData.DestBuffer.size() * sizeof(UINT),
+		reinterpret_cast<BYTE*>(g_spritesheetBitmapData.DestBuffer.data()),
+		&wicBitmap);
+
+	if (FAILED(frameEncode->WriteSource(
+		wicBitmap.Get(),
+		NULL)))
+	{
+		return;
+	}
+
+	if (FAILED(frameEncode->Commit()))
+	{
+		return;
+	}
+
+	if (FAILED(encoder->Commit()))
+	{
+		return;
+	}
+
+	if (FAILED(stream->Commit(STGC_DEFAULT)))
+	{
+		return;
+	}
 }
 
 extern "C" __declspec(dllexport) void _stdcall SaveGif(HWND parentDialog, int animationSpeed, int loopCount, int gifWidth, int gifHeight)
@@ -991,11 +1109,12 @@ extern "C" __declspec(dllexport) void _stdcall ReloadImage()
 	LoadSpritesheetFileImpl();
 }
 
-void PlotSnow(int frame, int flakeX, int flakeY, UINT snowColor)
+
+void PlotSnowPixel(int frame, int flakeX, int flakeY, UINT snowColor)
 {
-	while (flakeX < 0)
+	if (flakeX < 0)
 	{
-		flakeX += g_spriteWidth;
+		return;
 	}
 
 	if (flakeY < 0)
@@ -1003,9 +1122,9 @@ void PlotSnow(int frame, int flakeX, int flakeY, UINT snowColor)
 		return;
 	}
 
-	while (flakeX >= g_spriteWidth)
+	if (flakeX >= g_spriteWidth)
 	{
-		flakeX -= g_spriteWidth;
+		return;
 	}
 
 	if (flakeY >= g_spriteHeight)
@@ -1023,10 +1142,34 @@ void PlotSnow(int frame, int flakeX, int flakeY, UINT snowColor)
 	g_spritesheetBitmapData.DestBuffer[index] = snowColor;
 }
 
+void PlotSnow(int frame, int flakeX, int flakeY, UINT snowColor, int particleSize)
+{
+	float rad = static_cast<float>(particleSize) / 2;
+	float radsq = rad * rad;
+
+	for (int y = 0; y < particleSize; ++y)
+	{
+		for (int x = 0; x < particleSize; ++x)
+		{
+			float xNorm = x - rad;
+			float yNorm = y - rad;
+
+			float xNormSq = xNorm * xNorm;
+			float yNormSq = yNorm * yNorm;
+
+			if (xNormSq + yNormSq < radsq)
+			{
+				PlotSnowPixel(frame, flakeX + x, flakeY + y, snowColor);
+			}
+		}
+	}
+}
+
 void AddSnowColumn(
+	UINT snowColor,
+	int particleSize,
 	int flakeX, 
 	int yVelocity, 
-	UINT snowColor,
 	int columnInitialYPositionBase,
 	int columnInitialYPositionRandomIncrementLimit,
 	int oneOverXVelocityBase,
@@ -1057,7 +1200,7 @@ void AddSnowColumn(
 		case 7: xDisp = 1; break;
 		}
 
-		PlotSnow(frame, flakeX + xDisp, flakeY, snowColor);
+		PlotSnow(frame, flakeX + xDisp, flakeY, snowColor, particleSize);
 
 		xVelocityCounter++;
 		if (xVelocityCounter == oneOverXVelocity)
@@ -1080,6 +1223,8 @@ void AddSnowColumn(
 
 extern "C" __declspec(dllexport) void _stdcall AddSnow(
 	int colorArgb,
+	int particleSize,
+	int initialXPosition,
 	int columnSpacingBase,
 	int colulmnSpacingRandomIncrementLimit,
 	int columnInitialYPositionBase,
@@ -1099,9 +1244,10 @@ extern "C" __declspec(dllexport) void _stdcall AddSnow(
 	while (flakeX < g_spriteWidth)
 	{
 		AddSnowColumn(
+			snowColor,
+			particleSize,
 			flakeX, 
 			yVelocity, 
-			snowColor, 
 			columnInitialYPositionBase,
 			columnInitialYPositionRandomIncrementLimit,
 			oneOverXVelocityBase,
