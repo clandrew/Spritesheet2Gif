@@ -13,3 +13,5 @@ Native/Release/*
 /x64/Debug/*
 /x64/Release/*
 *.svg
+/local/
+/local/spritesheet.png

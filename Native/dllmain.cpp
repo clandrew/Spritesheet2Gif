@@ -465,7 +465,7 @@ extern "C" __declspec(dllexport) void _stdcall OpenSpritesheetFile(HWND dialogPa
 #if _DEBUG
 extern "C" __declspec(dllexport) void _stdcall AutoOpenSpritesheetFile(HWND dialogParent)
 {
-	std::wstring testFilename = L"C:\\Users\\Claire\\Documents\\nphl\\spritetest2.png";
+	std::wstring testFilename = L"C:\\Users\\cmlan\\OneDrive\\Pictures\\DOSEmber2026\\SnowTest.png";
 
 	OpenSpritesheetFileImpl(dialogParent, testFilename);
 }
@@ -989,6 +989,116 @@ extern "C" __declspec(dllexport) void _stdcall ResetZoom(HWND parentDialog)
 extern "C" __declspec(dllexport) void _stdcall ReloadImage()
 {
 	LoadSpritesheetFileImpl();
+}
+
+void PlotSnow(int frame, int flakeX, int flakeY, UINT snowColor)
+{
+	while (flakeX < 0)
+	{
+		flakeX += g_spriteWidth;
+	}
+
+	if (flakeY < 0)
+	{
+		return;
+	}
+
+	while (flakeX >= g_spriteWidth)
+	{
+		flakeX -= g_spriteWidth;
+	}
+
+	if (flakeY >= g_spriteHeight)
+	{
+		return;
+	}
+
+	float localX = g_spritesheetRects[frame].left;
+	float localY = g_spritesheetRects[frame].top;
+
+	localX += flakeX;
+	localY += flakeY;
+
+	int index = (localY * g_spritesheetBitmapData.Size.width) + localX;
+	g_spritesheetBitmapData.DestBuffer[index] = snowColor;
+}
+
+void AddSnowColumn(int flakeX, int yVelocity, UINT snowColor)
+{
+	int oneOverXVelocity = 4 + ((rand() % 10));
+
+	int flakeY = -40 + (rand() % 40);
+
+	int frame = 0;
+
+	int xAnim = rand() % 8;
+
+	int xVelocityCounter = 0;
+
+	while(flakeY < g_spriteHeight)
+	{
+		int xDisp;
+		switch (xAnim)
+		{
+		case 0: xDisp = 0; break;
+		case 1: xDisp = -1; break;
+		case 2: xDisp = -2; break;
+		case 3: xDisp = -1; break;
+		case 4: xDisp = 0; break;
+		case 5: xDisp = 1; break;
+		case 6: xDisp = 2; break;
+		case 7: xDisp = 1; break;
+		}
+
+		PlotSnow(frame, flakeX + xDisp, flakeY, snowColor);
+
+		xVelocityCounter++;
+		if (xVelocityCounter == oneOverXVelocity)
+		{
+			xVelocityCounter = 0;
+			flakeX++;
+		}
+
+		frame = (frame + 1) % g_spritesheetRects.size();
+
+		if (rand() % 4 != 0)
+		{
+			xAnim = (xAnim + 1) % 8;
+		}
+
+		flakeY += yVelocity;
+	}
+
+}
+
+extern "C" __declspec(dllexport) void _stdcall AddSnow()
+{
+	// Like, we could do something to retarget the image on the GPU.
+	// But then again we can do all our drawing on the CPU and just recreate the bitmap.
+
+	g_d2dSpritesheetBitmap.Reset();
+
+	UINT snowColor = 0xFFFFFFFF;
+	int yVelocity = 3;
+
+	int flakeX = 0;
+	while (flakeX < g_spriteWidth)
+	{
+		AddSnowColumn(flakeX, yVelocity, snowColor);
+
+		flakeX += 12 + (rand() % 4);
+	}
+
+	D2D1_BITMAP_PROPERTIES bitmapProperties = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
+	if (FAILED(g_renderTarget->CreateBitmap(
+		g_spritesheetBitmapData.Size,
+		&g_spritesheetBitmapData.DestBuffer[0],
+		g_spritesheetBitmapData.Size.width * sizeof(UINT),
+		bitmapProperties,
+		&g_d2dSpritesheetBitmap)))
+	{
+		return;
+	}
 }
 
 extern "C" __declspec(dllexport) void _stdcall Uninitialize()

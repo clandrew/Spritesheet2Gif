@@ -31,13 +31,15 @@ namespace Spritesheet2Gif
             resetZoomToolStripMenuItem.Enabled = false;
             refreshToolStripMenuItem.Enabled = false;
 
-            //dbgAutoOpen = true;
-
 #if DEBUG
+            dbgAutoOpen = true;
             if (dbgAutoOpen)
             {
                 Native.AutoOpenSpritesheetFile(this.Handle);
                 AfterOpen_EnableUI();
+                this.spriteWidth.Value = 256;
+                Native.AddSnow();
+                Native.Paint();
             }
 #endif
         }
@@ -236,6 +238,12 @@ namespace Spritesheet2Gif
             Native.ReloadImage();
             Native.Paint();
         }
+
+        private void snowToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Native.AddSnow();
+            Native.Paint();
+        }
     }
 }
 
@@ -288,6 +296,9 @@ class Native
 
     [DllImport("Native.dll")]
     public static extern void ReloadImage();
+
+    [DllImport("Native.dll")]
+    public static extern void AddSnow();
 
     [DllImport("Native.dll")]
     public static extern void Uninitialize();
