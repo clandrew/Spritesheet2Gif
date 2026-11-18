@@ -1027,7 +1027,7 @@ void AddSnowColumn(int flakeX, int yVelocity, UINT snowColor)
 {
 	int oneOverXVelocity = 4 + ((rand() % 10));
 
-	int flakeY = -40 + (rand() % 40);
+	int flakeY = -80 + (rand() % 80);
 
 	int frame = 0;
 
